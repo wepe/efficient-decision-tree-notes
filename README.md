@@ -6,4 +6,30 @@
 
 SLIQ和SPRINT算法的特点决定了树生长的方式是level-wise(breadth-first)的，与之对应的是leaf-wise(depth-wise，best-wise[6])的方式，LightGBM正是采用leaf-wise的方式．
 
+内容大致按以下几部分展开:
+
+- 基于特征预排序的算法SLIQ和SPRINT
+
+- 基于特征离散的系列算法
+
+- 研究开源框架: LightGBM，XGBoost，Decision_Tree_PDeque
+
+- 自己动手实现一个高效决策树
+
+
+### 参考文献
+
+[1] Mehta, Manish, Rakesh Agrawal, and Jorma Rissanen. “SLIQ: A fast scalable classifier for data mining.” International Conference on Extending Database Technology. Springer Berlin Heidelberg, 1996.
+
+[2] Shafer, John, Rakesh Agrawal, and Manish Mehta. “SPRINT: A scalable parallel classifier for data mining.” Proc. 1996 Int. Conf. Very Large Data Bases. 1996.
+
+[3] Ranka, Sanjay, and V. Singh. “CLOUDS: A decision tree classifier for large datasets.” Proceedings of the 4th Knowledge Discovery and Data Mining Conference. 1998.
+
+[4] Machado, F. P. “Communication and memory efficient parallel decision tree construction.” (2003).
+
+[5] Li, Ping, Qiang Wu, and Christopher J. Burges. “Mcrank: Learning to rank using multiple classification and gradient boosting.” Advances in neural information processing systems. 2007.
+
+[6] Shi, Haijian. “Best-first decision tree learning.” Diss. The University of Waikato, 2007.
+
+[7] https://github.com/bobye/Decision_Tree_PDeque
 

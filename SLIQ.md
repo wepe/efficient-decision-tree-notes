@@ -10,7 +10,9 @@ SLIQ是论文"SLIQ: A Fast Scalable Classifier for Data Mining"提出的Scalable
 
 决策树构建过程主要包括tree-building 树生长，tree-pruning树剪枝．下图显示了递归方式的树生长过程．
 
-[Selection_003.png]()
+
+![Selection_003.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_003.png)
+
 
 对于树剪枝，一般将数据分为两部分，一部分训练，一部分作为验证，用于剪枝，寻找最小验证集误差的树结构．
 
@@ -26,22 +28,28 @@ SLIQ是论文"SLIQ: A Fast Scalable Classifier for Data Mining"提出的Scalable
 
 ### SLIQ算法
 
-#### 数值型特征预排序和宽度优先的树生长策略（Pre-Sorting and Breadth-First Growth）
+### 数值型特征预排序和宽度优先的树生长策略（Pre-Sorting and Breadth-First Growth）
 
 - 数据结构attribute list和class list的设计
 
 SLIQ设计了attribute list和class list两种数据结构来实现pre-sorting，其结构如下图所示：
-[Selection_004.png]()
+
+![Selection_004.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_004.png)
+
 
 图中训练数据有6个样本，age和salary是属性(特征)，class是类别．每个特征对应一个attribute list,　该结构包括两列，一列是属性的值，按从小到大排好了序，另一列是样本对应的行索引.　　class list结构按行索引顺序存储了所有样本，同样包括两列，一列存储了样本的类别，另一列存储当前该样本所属的叶节点．SLIQ算法假设class list可以常驻内存(memory-resident)，因为在SLIQ算法中class list被频繁地读写．当内存不够大时，attribute list可以存储在磁盘．所以SLIQ支持out-of-core　learning.
 
 - split finding过程
 
 我们接着看split finding的过程，由于有上面两个list结构，只需要扫一遍数据，就可以找到同一层每个树节点的最佳分裂特征和特征阈值（这也是为什么SLIQ是breadth-first/level-wise的），下图是算法流程:
-[Selection_005.png]()
+
+![Selection_005.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_005.png)
+
 
 再通过一个例子加深理解：
-[Selection_006.png]()
+
+![Selection_006.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_006.png)
+
 
 首先，每个叶节点都会维护一个直方图，本例子中有两种类别G和B，所以根据叶节点上每个样本所属类别就可以统计出该叶节点的GB直方图．在开始扫描salary　list前，这个直方图就已经构建好了，而且初始时，split threshold是-inf，所有样本分到右子节点，所以L对应的直方图G,B取值都是0.　
 
@@ -55,7 +63,8 @@ SLIQ设计了attribute list和class list两种数据结构来实现pre-sorting�
 
 找到每个叶节点的最佳特征和最佳阈值后，下一步要对节点进行分裂，以及更新class list．该过程如下图所示:
 
-[Selection_007.png]()
+![Selection_007.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_007.png)
+
 
 在上一个步骤split finding中，我们知道了属性salary被选中为最佳特征(可能被多个叶节点选中，如本例N2和N3都选中了salary)，所以我们需要再扫描一遍salary，如上图所示，当扫描到第二个样本(40,4)的时候，我们找到class list第４行，知道它在节点N3，而N3的分裂阈值是50，所以该样本被分到N3的左子节点N6，更新class list的leaf 列．当扫描完所有被选中的特征后，class list就更新完毕了，当class list更新完毕后，我们需要扫描一遍class list，构建每个新叶子节点的直方图．
 
@@ -64,12 +73,12 @@ SLIQ设计了attribute list和class list两种数据结构来实现pre-sorting�
 在树生长过程中，有些叶节点会变成＂纯＂节点，或者满足了停止分裂条件，那么落入这些节点的样本将不会再被使用，所以将这些样本从attribute list中删除掉，可以减少后续遍历attribute list的时间．
 
 
-#### 类别型特征的子集搜索方法
+### 类别型特征的子集搜索方法
 
 假设一个类别型特征有n种取值，那么一共就有2＾n种子集．当n＜＝10时，SLIQ暴力枚举每种分裂方法．当n＞10时，SLIQ采用贪心算法，维护空集S，每次从n种值里面选１个最佳的加入S，直到没有增益为止．
 
 
-#### 树剪枝
+### 树剪枝
 
 SLIQ的剪枝算法基于MDL原则(Minimum Description Length )，本文略去这部分．
 
@@ -82,7 +91,9 @@ SLIQ的剪枝算法基于MDL原则(Minimum Description Length )，本文略去�
 
 第二种，partition，将class list切分为N份，每个计算节点维护一份．这样一来，每个计算节点上有(N-1)/N的样本需要经过通信获取其对应的class list信息，这个通信量相比第一种方案更大．
 
-###　参考文献
+
+### 参考文献
+
 
 [1] J. Catlett. Megainduction: Machine Learning on Very Large Databases. PhD thesis,University of Sydney, 
 [2] P. K. Chan and S. J. StoIfo. Meta-learning for multistrategy and parallel learning. In Proc. Second Intl. Workshop on Mu&strategy Learning, pages 150-165, 1993. 

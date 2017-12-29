@@ -5,33 +5,35 @@ SPRINT是SLIQ算法的改进版．我们知道，SLIQ算法需要频繁地查询
 
 ### 数据结构的设计
 
-#### Attribute list
+### Attribute list
 
 SPRINT采用的attribute list结构如下图所示，包括三列，第一列是属性的值，按从小到大排好了序，第二列是样本的类别，第三列是样本的索引 rid．当叶节点分裂时，每个attribute list也被切分为两个，分配给每个子节点．并且切分后的attribute list上的特征的值仍然是有序的．
 
-[Selection_008.png]()
+
+![Selection_008.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_008.png)
 
 
-#### split finding过程
+
+### split finding过程
 
 - 数值型特征
 
 对于数值型特征，split　finding的过程跟SLIQ一致．如下图所示，扫一遍age list，边扫边更新直方图，同时计算增益，就可以得到age属性的最佳切分阈值.　只不过在SPRINT里，每个叶节点维护自己的attribute list，得到的也就只是这个叶节点的最佳切分阈值．
 
-[Selection_009.png]()
+![Selection_009.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_009.png)
 
 - 类别型特征
 
 对类别型特征，在扫一遍attribute list后，构建出count matrix，根据count matrix再去找最佳子集．
 
-[Selection_010.png]()
+![Selection_010.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_010.png)
 
 
-#### 节点分裂过程
+### 节点分裂过程
 
 根据找到的最佳特征和最佳切分阈值，我们需要对节点进行分裂，同时切分attribute list．仍以下图为例:
 
-[Selection_008.png]()
+![Selection_008.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_008.png)
 
 节点0选中了age属性，阈值27.5，那么对于age list，可以直接切分为两部分，分别分配给节点１和２．而对于car type list的切分就没那么直接了．我们需要在切分age list时，用哈希表记录(rid,leaf_node)，即记录样本的索引及其对应的叶节点．根据这个哈希表我们就可以对car type list进行切分了．当然，这个哈希表无需记录所有样本的索引及其叶节点，只需要记录两个子节点中分配到的样本较少的那个．
 

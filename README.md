@@ -8,16 +8,20 @@ SLIQ和SPRINT算法的特点决定了树生长的方式是level-wise(breadth-fir
 
 内容大致按以下几部分展开:
 
-- 基于特征预排序的算法SLIQ和SPRINT
+- 基于特征预排序的算法SLIQ
 
-- 基于特征离散的系列算法
+- 基于特征预排序的算法SPRINT
+
+- 基于特征离散化的算法CLOUDS
 
 - 研究开源框架: LightGBM，XGBoost，Decision_Tree_PDeque
 
 - 自己动手实现一个高效决策树
 
 
+
 ### 参考文献
+
 
 [1] Mehta, Manish, Rakesh Agrawal, and Jorma Rissanen. “SLIQ: A fast scalable classifier for data mining.” International Conference on Extending Database Technology. Springer Berlin Heidelberg, 1996.
 

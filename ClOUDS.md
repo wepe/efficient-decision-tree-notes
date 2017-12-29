@@ -10,7 +10,7 @@ CLOUDS（assification for Large or OUt-of-core　DataSets)）是基于直方图�
 
 - Sampling the Splitting points (SS)
 
-第一种方法叫SS，实际上就是将数值特征离散为q个区间，只考察分位点的分裂效果．区间的划分有两种方法，等频与等距．　等频划分得到的每个区间的样本个数相等，比较常用（例如LightGBM用的就是等频划分）．　等距划分得到的每个区间的宽度相等，容易受特征的数值分布影响，但在估计区间边界时会更快，因为它只需要找到特征的最大最小值，然后等间隔划分．
+第一种方法叫SS，实际上就是将数值特征离散为q个区间，只考察分位点的分裂效果．区间的划分有两种方法，等频与等距．　等频划分得到的每个区间的distinct value个数相等，比较常用，例如LightGBM先统计每个特征的distinct value的个数，如果小于bin个数，则每个distinct value放入一个bin，如果ditinct　value个数多于bin个数，则求出每个bin应该放多少个ditinct value，LightGBM的这个做法可以保证相同的value的样本在同一个bin里．　等距划分得到的每个区间的宽度相等，容易受特征的数值分布影响，但在估计区间边界时会更快，因为它只需要找到特征的最大最小值，然后等间隔划分．
 
 - Sampling the Splitting points with Estimation（SSE)
 

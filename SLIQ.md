@@ -96,4 +96,5 @@ SLIQ的剪枝算法基于MDL原则(Minimum Description Length )，本文略去�
 
 
 [1] J. Catlett. Megainduction: Machine Learning on Very Large Databases. PhD thesis,University of Sydney, 
+
 [2] P. K. Chan and S. J. StoIfo. Meta-learning for multistrategy and parallel learning. In Proc. Second Intl. Workshop on Mu&strategy Learning, pages 150-165, 1993. 

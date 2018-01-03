@@ -2,10 +2,6 @@
 import numpy as np
 
 
-FEATURE_DIM = None
-DATASET_SIZE = None
-
-
 class AttributeList(object):
     def __init__(self, features, bin_structure):
         self.features = features
@@ -14,10 +10,6 @@ class AttributeList(object):
         self.attribute_list = [np.empty((self.dataset_size,), dtype=[("attribute", "uint8"), ("index", "int32")]) for _ in range(self.feature_dim)]
         self.attribute_list_cutting_index = [[] for _ in range(self.feature_dim)]
         self.bin_structure = bin_structure
-
-        # set global variable
-        self.set_global_variable()
-
         self.construct_attribute_list()
 
     def construct_attribute_list(self):
@@ -61,11 +53,6 @@ class AttributeList(object):
 
     def clean_up(self):
         # clear not necessary instance attribute
-        del self.features, self.bin_structure, self.dataset_size, self.feature_dim
-
-    def set_global_variable(self):
-        global FEATURE_DIM, DATASET_SIZE
-        FEATURE_DIM = self.feature_dim
-        DATASET_SIZE = self.dataset_size
+        del self.features, self.bin_structure, self.dataset_size
 
 #TODO: parallel construct_attribute_list

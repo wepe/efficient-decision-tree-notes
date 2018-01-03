@@ -8,9 +8,20 @@ class ClassList(object):
         self.dataset_size = label.shape[0]
         self.label = label
         self.corresponding_tree_node = [None for _ in range(self.dataset_size)]
-        self.pred = np.empty(label.shape, dtype="float32")
+        self.pred = np.ones(label.shape, dtype="float32")
         self.grad = np.empty(label.shape, dtype="float32")
         self.hess = np.empty(label.shape, dtype="float32")
+
+    def initialize_pred(self, first_round_pred):
+        self.pred *= first_round_pred
+
+    def update_pred(self, eta):
+        for i in range(self.dataset_size):
+            self.pred[i] += eta*self.corresponding_tree_node[i].leaf_score
+
+    def update_grad_hess(self, loss):
+        self.grad = loss.grad(self.pred, self.label)
+        self.hess = loss.hess(self.pred, self.label)
 
     def sampling(self, row_mask):
         self.grad *= row_mask

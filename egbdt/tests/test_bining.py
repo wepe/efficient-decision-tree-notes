@@ -1,9 +1,9 @@
-from egbdt.bin import BinStructure
+from egbdt.bining import BinStructure
 import numpy as np
 import sys
 
 
-features = np.random.randint(10000, size=(1000000, 50))
+features = np.random.random((1000000, 50))
 feature_dim = features.shape[1]
 print features
 

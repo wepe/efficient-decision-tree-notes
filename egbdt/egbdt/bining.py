@@ -44,7 +44,7 @@ class BinStructure(object):
         for i in range(self.feature_dim):
             distinct_value_cnt = {}
             for value in self.data_selected[:, i]:
-                if value in distinct_value_cnt:
+                if distinct_value_cnt.has_key(value):
                     distinct_value_cnt[value] += 1
                 else:
                     distinct_value_cnt[value] = 1
@@ -77,3 +77,5 @@ class BinStructure(object):
 
     def __getitem__(self, item):
         return self.bins_upper_bounder[item]
+
+# when the input feature has nan, it become very slow

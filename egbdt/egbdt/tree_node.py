@@ -1,19 +1,19 @@
 import numpy as np
-from attribute_list import FEATURE_DIM
 
 
 class TreeNode(object):
-    def __init__(self, depth=1, is_leaf=False):
+    def __init__(self, depth=1, feature_dim=None, is_leaf=False):
         self.depth = depth
+        self.feature_dim = feature_dim
         self.is_leaf = is_leaf
         self.num_sample = 0
         self.Grad = 0
         self.Hess = 0
-        self.G_left = [0 for _ in range(FEATURE_DIM)]
-        self.H_left = [0 for _ in range(FEATURE_DIM)]
-        self.best_uint8_thresholds = [None for _ in range(FEATURE_DIM)]
-        self.best_thresholds = [None for _ in range(FEATURE_DIM)]
-        self.best_gains = [-np.inf for _ in range(FEATURE_DIM)]
+        self.G_left = [0 for _ in range(self.feature_dim)]
+        self.H_left = [0 for _ in range(self.feature_dim)]
+        self.best_uint8_thresholds = [None for _ in range(self.feature_dim)]
+        self.best_thresholds = [None for _ in range(self.feature_dim)]
+        self.best_gains = [-np.inf for _ in range(self.feature_dim)]
 
     def Grad_add(self, value):
         self.Grad += value
@@ -78,4 +78,5 @@ class TreeNode(object):
 
     def clean_up(self):
         # clear not necessary instance attribute and methods
-        del self.best_uint8_thresholds, self.best_thresholds, self.best_gains, self.Grad, self.Hess, self.G_left, self.H_left
+        del self.best_uint8_thresholds, self.best_thresholds, self.best_gains, \
+            self.Grad, self.Hess, self.G_left, self.H_left, self.feature_dim

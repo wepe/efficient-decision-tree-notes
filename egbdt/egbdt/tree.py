@@ -2,6 +2,20 @@ from tree_node import TreeNode
 import Queue
 from multiprocessing import Pool
 import numpy as np
+import copy_reg
+import types
+
+
+# use copy_reg to make the instance method picklable,
+# because multiprocessing must pickle things to sling them among process
+def _pickle_method(m):
+    if m.im_self is None:
+        return getattr, (m.im_class, m.im_func.func_name)
+    else:
+        return getattr, (m.im_self, m.im_func.func_name)
+
+
+copy_reg.pickle(types.MethodType, _pickle_method)
 
 
 class Tree(object):
@@ -77,9 +91,9 @@ class Tree(object):
                 best_feature, best_uint8_threshold, best_threshold, best_gain = tree_node.get_best_feature_threshold_gain()
                 if best_gain > 0:
                     nan_direction = 0  # TODO
-                    left_child = TreeNode(depth=tree_node.depth+1)
-                    right_child = TreeNode(depth=tree_node.depth+1)
-                    tree_node.internal_node_setter(self, best_feature, best_uint8_threshold, best_threshold, nan_direction, left_child, right_child)
+                    left_child = TreeNode(depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    right_child = TreeNode(depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    tree_node.internal_node_setter(best_feature, best_uint8_threshold, best_threshold, nan_direction, left_child, right_child)
 
                     # update class_list.corresponding_tree_node
                     # TODO: can update class list one pass? current implementation is num_treenode pass
@@ -109,9 +123,6 @@ class Tree(object):
                 else:
                     self.alive_nodes.put(tree_node)
 
-        # when finish building this tree, update the class_list.pred, grad, hess
-        # class_list.update_pred()
-
     def fit(self, attribute_list, class_list, row_sampler, col_sampler, bin_structure):
         # when we start to fit a tree, we first conduct row and column sampling
         col_sampler.shuffle()
@@ -119,7 +130,7 @@ class Tree(object):
         class_list.sampling(row_sampler.row_mask)
 
         # then we create the root node, initialize histogram(Gradient sum and Hessian sum)
-        root_node = TreeNode(depth=1)
+        root_node = TreeNode(depth=1, feature_dim=attribute_list.feature_dim)
         root_node.Grad_setter(class_list.grad.sum())
         root_node.Hess_setter(class_list.hess.sum())
         self.root = root_node

@@ -1,6 +1,6 @@
 import numpy as np
-from egbdt.bining import BinStructure
-from egbdt.attribute_list import AttributeList
+from tgboost.bining import BinStructure
+from tgboost.attribute_list import AttributeList
 
 
 features = np.random.randint(1000, size=(1000000, 1))

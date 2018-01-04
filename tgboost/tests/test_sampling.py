@@ -1,4 +1,4 @@
-from egbdt import sampling
+from tgboost import sampling
 
 rs = sampling.RowSampler(10000, 0.7)
 print type(rs.row_mask), rs.row_mask.sum(), rs.row_mask

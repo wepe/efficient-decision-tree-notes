@@ -1,4 +1,4 @@
-from egbdt import tgb
+from tgboost import tgb
 import pandas as pd
 
 train = pd.read_csv('../../train.csv')

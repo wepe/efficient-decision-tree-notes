@@ -1,4 +1,4 @@
-from egbdt.bining import BinStructure
+from tgboost.bining import BinStructure
 import numpy as np
 import sys
 

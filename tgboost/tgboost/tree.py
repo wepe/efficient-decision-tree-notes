@@ -4,7 +4,7 @@ from functools import partial
 import numpy as np
 import copy_reg
 import types
-from time import time
+
 
 # use copy_reg to make the instance method picklable,
 # because multiprocessing must pickle things to sling them among process
@@ -39,6 +39,7 @@ class Tree(object):
         self.feature_importance = {}
         self.alive_nodes = []
         self.name_to_node = {}
+        self.max_name = 0
 
         if num_thread == -1:
             self.num_thread = cpu_count()
@@ -58,7 +59,6 @@ class Tree(object):
 
         this gain is the loss reduction, We want it to be as large as possible.
 
-        G_nan, H_nan from NAN faeture value data, if nan_direction==0, they go to the left child.
         """
         G_right = G_total - G_left
         H_right = H_total - H_left
@@ -90,6 +90,7 @@ class Tree(object):
 
     def build(self, attribute_list, class_list, col_sampler, bin_structure):
         while len(self.alive_nodes) != 0:
+            self.max_name += len(self.alive_nodes)
 
             # scan each attribute list
             func = partial(self._process_one_attribute_list, attribute_list, class_list)
@@ -106,40 +107,49 @@ class Tree(object):
                         G, H = tree_node_G_H[tree_node_name]
                         G_left, H_left = tree_node.get_Gleft_Hleft(col, G, H)
                         G_total, H_total = tree_node.Grad, tree_node.Hess
-                        gain = self.calculate_split_gain(G_left, H_left, G_total, H_total)
+                        G_nan, H_nan = tree_node.Grad_missing[col], tree_node.Hess_missing[col]
+                        gain = self.calculate_split_gain(G_left, H_left, G_total-G_nan, H_total-H_nan)
                         tree_node.update_best_gain(col, uint8_threshold, bin_structure[col][uint8_threshold], gain)
 
             # once had scan all column, we can get the best (feature,threshold,gain) for each alive tree node
             cur_level_node_size = len(self.alive_nodes)
             new_tree_nodes = []
-            treenode_leftinds = []
+            treenode_leftinds_naninds = []
             for _ in range(cur_level_node_size):
                 tree_node = self.alive_nodes.pop(0)
                 best_feature, best_uint8_threshold, best_threshold, best_gain = tree_node.get_best_feature_threshold_gain()
                 if best_gain > 0:
-                    nan_direction = 0  # TODO
-                    left_child = TreeNode(name=2*tree_node.name, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
-                    right_child = TreeNode(name=2*tree_node.name+1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
-                    tree_node.internal_node_setter(best_feature, best_uint8_threshold, best_threshold, nan_direction, left_child, right_child)
+                    left_child = TreeNode(name=3*tree_node.name-1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    right_child = TreeNode(name=3*tree_node.name+1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    nan_child = TreeNode(name=3*tree_node.name, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    tree_node.internal_node_setter(best_feature, best_uint8_threshold, best_threshold, nan_child, left_child, right_child)
 
-                    # to update class_list.corresponding_tree_node one pass, we should save (tree_node,left_inds)
+                    # to update class_list.corresponding_tree_node one pass, we should save (tree_node,left_inds, nan_inds)
                     left_inds = attribute_list[best_feature]["index"][0:attribute_list.attribute_list_cutting_index[best_feature][best_uint8_threshold+1]]
-                    treenode_leftinds.append((tree_node, set(left_inds)))
+                    nan_inds = attribute_list.missing_value_attribute_list[best_feature]
+                    treenode_leftinds_naninds.append((tree_node, (set(left_inds), set(nan_inds))))
 
                     new_tree_nodes.append(left_child)
                     new_tree_nodes.append(right_child)
+                    new_tree_nodes.append(nan_child)
                     self.name_to_node[left_child.name] = left_child
                     self.name_to_node[right_child.name] = right_child
+                    self.name_to_node[nan_child.name] = nan_child
 
                 else:
                     leaf_score = self.calculate_leaf_score(tree_node.Grad, tree_node.Hess)
                     tree_node.leaf_node_setter(leaf_score)
 
             # update class_list.corresponding_tree_node one pass
-            class_list.update_corresponding_tree_node(treenode_leftinds)
+            class_list.update_corresponding_tree_node(treenode_leftinds_naninds)
 
             # update histogram(Grad,Hess,num_sample) for each alive(new) tree node
             class_list.update_histogram_for_tree_node()
+
+            # update Grad_missing, Hess_missing for each alive(new) tree node
+            for tree_node in new_tree_nodes:
+                tree_node.reset_Grad_Hess_missing()
+            attribute_list.update_grad_hess_missing_for_tree_node(class_list)
 
             # process the new tree nodes
             # satisfy max_depth? min_child_weight? min_sample_split?
@@ -147,7 +157,9 @@ class Tree(object):
             # if no, put into self.alive_node
             while len(new_tree_nodes) != 0:
                 tree_node = new_tree_nodes.pop()
-                if tree_node.depth >= self.max_depth \
+                if tree_node.num_sample == 0:
+                    tree_node.empty_node_setter()
+                elif tree_node.depth >= self.max_depth \
                         or tree_node.Hess < self.min_child_weight \
                         or tree_node.num_sample <= self.min_sample_split:
                     tree_node.leaf_node_setter(self.calculate_leaf_score(tree_node.Grad, tree_node.Hess))
@@ -185,7 +197,12 @@ class Tree(object):
         """
         cur_tree_node = self.root
         while not cur_tree_node.is_leaf:
-            if feature[cur_tree_node.split_feature] <= cur_tree_node.split_threshold:
+            if np.isnan(feature[cur_tree_node.split_feature]):
+                if cur_tree_node.nan_child.is_empty:
+                    cur_tree_node = cur_tree_node.left_child
+                else:
+                    cur_tree_node = cur_tree_node.nan_child
+            elif feature[cur_tree_node.split_feature] <= cur_tree_node.split_threshold:
                 cur_tree_node = cur_tree_node.left_child
             else:
                 cur_tree_node = cur_tree_node.right_child

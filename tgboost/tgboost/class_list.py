@@ -20,8 +20,10 @@ class ClassList(object):
             self.pred[i] += eta*self.corresponding_tree_node[i].leaf_score
 
     def update_grad_hess(self, loss):
-        self.grad = loss.grad(self.pred, self.label)
-        self.hess = loss.hess(self.pred, self.label)
+        # self.grad = loss.grad(self.pred, self.label)
+        # self.hess = loss.hess(self.pred, self.label)
+        self.grad[:] = loss.grad(self.pred, self.label)
+        self.hess[:] = loss.hess(self.pred, self.label)
 
     def sampling(self, row_mask):
         self.grad *= row_mask
@@ -41,15 +43,19 @@ class ClassList(object):
                 ret[tree_node.name][1] += self.hess[i]
         return ret
 
-    def update_corresponding_tree_node(self, treenode_leftinds):
+    def update_corresponding_tree_node(self, treenode_leftinds_naninds):
         # scan the class list, if the data fall into tree_node
         # then we see whether its index is in left_inds or right_inds, update the corresponding tree node
-        map = dict(treenode_leftinds)
+        map = dict(treenode_leftinds_naninds)
         for i in range(self.dataset_size):
             tree_node = self.corresponding_tree_node[i]
             if not tree_node.is_leaf:
-                if i in map[tree_node]:
+                left_inds = map[tree_node][0]
+                nan_inds = map[tree_node][1]
+                if i in left_inds:
                     self.corresponding_tree_node[i] = tree_node.left_child
+                elif i in nan_inds:
+                    self.corresponding_tree_node[i] = tree_node.nan_child
                 else:
                     self.corresponding_tree_node[i] = tree_node.right_child
 

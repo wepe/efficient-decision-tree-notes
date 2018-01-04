@@ -19,6 +19,16 @@ class TreeNode(object):
         self.best_uint8_thresholds = [None for _ in range(self.feature_dim)]
         self.best_thresholds = [None for _ in range(self.feature_dim)]
         self.best_gains = [-np.inf for _ in range(self.feature_dim)]
+        # some data fall into this tree node
+        # for each feature of these data, which is missing value, and their gradient sum, hessian sum
+        self.Grad_missing = [0 for _ in range(self.feature_dim)]
+        self.Hess_missing = [0 for _ in range(self.feature_dim)]
+
+        self.is_empty = False
+
+    def reset_Grad_Hess_missing(self):
+        self.Grad_missing = [0 for _ in range(self.feature_dim)]
+        self.Hess_missing = [0 for _ in range(self.feature_dim)]
 
     def Grad_add(self, value):
         self.Grad += value
@@ -55,19 +65,18 @@ class TreeNode(object):
         return best_feature, self.best_uint8_thresholds[best_feature], \
                self.best_thresholds[best_feature], self.best_gains[best_feature]
 
-    def internal_node_setter(self, feature, uint8_threshold, threshold, nan_direction, left_child, right_child, is_leaf=False):
+    def internal_node_setter(self, feature, uint8_threshold, threshold, nan_child, left_child, right_child, is_leaf=False):
         """
         :param feature: split feature of the intermediate node
         :param threshold: split threshold of the intermediate node
         :param left_child: left child node
         :param right_child: right child node
-        :param nan_direction: if 0, those NAN sample goes to left child, if 1 goes to right child.
-                                goes to left child by default
+        :param nan_child: those missing value sample go to this branch, can be None
         """
         self.split_feature = feature
         self.split_uint8_threshold = uint8_threshold
         self.split_threshold = threshold
-        self.nan_direction = nan_direction
+        self.nan_child = nan_child
         self.left_child = left_child
         self.right_child = right_child
         self.is_leaf = is_leaf
@@ -81,6 +90,10 @@ class TreeNode(object):
         self.leaf_score = leaf_score
         self.clean_up()
 
+    def empty_node_setter(self):
+        self.is_empty = True
+        self.clean_up()
+
     def clean_up(self):
         # clear not necessary instance attribute and methods
         del self.best_uint8_thresholds, self.best_thresholds, self.best_gains, \
@@ -89,8 +102,12 @@ class TreeNode(object):
 
 """
 about TreeNode.name, an example:
-      1
-    2   3
-  4  5 6  7
-name of the root node is 1, its left child's name is 2*root.name, its right child's name is 2*root.name+1
+               1 
+      2        3       4
+   5  6  7   8 9 10  11 12 13
+   
+name of the root node is 1, 
+its left child's name is 3*root.name-1, 
+its right child's name is 3*root.name+1, 
+the middle child is nan_child, its name is 3*root.nam
 """

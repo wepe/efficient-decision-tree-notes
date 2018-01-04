@@ -131,7 +131,6 @@ class TGBoost(object):
         # start learning
         logging.info("TGBoost start training")
         for i in range(self.num_boost_round):
-            t0 = time()
             # train current tree
             tree = Tree(self.min_sample_split,
                         self.min_child_weight,
@@ -148,8 +147,7 @@ class TGBoost(object):
             class_list.update_grad_hess(self.loss)
             # save this tree
             self.trees.append(tree)
-
-            t1 = time()
+            logging.info("this tree has {} nodes".format(tree.max_name))
 
             # print training information
             if self.eval_metric is None:
@@ -163,13 +161,13 @@ class TGBoost(object):
                 train_metric = mertric_func(self.loss.transform(class_list.pred), label)
 
                 if not do_validation:
-                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}, exec time {tc:.3f}s".format(
-                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, tc=t1-t0))
+                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}".format(
+                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric))
                 else:
                     val_pred += self.eta * tree.predict(val_features)
                     val_metric = mertric_func(self.loss.transform(val_pred), val_label)
-                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}, val-{eval_metric}: {val_metric:.4f}, exec time {tc:.3f}s".format(
-                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, val_metric=val_metric, tc=t1-t0))
+                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}, val-{eval_metric}: {val_metric:.4f}".format(
+                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, val_metric=val_metric))
 
                     # check whether to early stop
                     if maximize:

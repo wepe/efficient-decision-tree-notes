@@ -1,5 +1,5 @@
 from tree_node import TreeNode
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from functools import partial
 import numpy as np
 import copy_reg
@@ -36,10 +36,14 @@ class Tree(object):
         self.rowsample = rowsample
         self.reg_lambda = reg_lambda
         self.gamma = gamma
-        self.num_thread = num_thread
         self.feature_importance = {}
         self.alive_nodes = []
         self.name_to_node = {}
+
+        if num_thread == -1:
+            self.num_thread = cpu_count()
+        else:
+            self.num_thread = num_thread
 
     def calculate_leaf_score(self, G, H):
         """
@@ -86,9 +90,10 @@ class Tree(object):
 
     def build(self, attribute_list, class_list, col_sampler, bin_structure):
         while len(self.alive_nodes) != 0:
-            # process each attribute list
+
+            # scan each attribute list
             func = partial(self._process_one_attribute_list, attribute_list, class_list)
-            pool = Pool()
+            pool = Pool(self.num_thread)
             rets = pool.map(func, col_sampler.col_selected)
             pool.close()
 
@@ -104,7 +109,7 @@ class Tree(object):
                         gain = self.calculate_split_gain(G_left, H_left, G_total, H_total)
                         tree_node.update_best_gain(col, uint8_threshold, bin_structure[col][uint8_threshold], gain)
 
-            # once scan all column, we can get the best (feature,threshold,gain) for each alive tree node
+            # once had scan all column, we can get the best (feature,threshold,gain) for each alive tree node
             cur_level_node_size = len(self.alive_nodes)
             new_tree_nodes = []
             treenode_leftinds = []
@@ -130,7 +135,7 @@ class Tree(object):
                     leaf_score = self.calculate_leaf_score(tree_node.Grad, tree_node.Hess)
                     tree_node.leaf_node_setter(leaf_score)
 
-            # update class_list.corresponding_tree_node
+            # update class_list.corresponding_tree_node one pass
             class_list.update_corresponding_tree_node(treenode_leftinds)
 
             # update histogram(Grad,Hess,num_sample) for each alive(new) tree node
@@ -160,6 +165,7 @@ class Tree(object):
         root_node.Grad_setter(class_list.grad.sum())
         root_node.Hess_setter(class_list.hess.sum())
         self.root = root_node
+
         # every time a new node is created, we put it into self.name_to_node
         self.name_to_node[root_node.name] = root_node
 
@@ -186,7 +192,7 @@ class Tree(object):
         return cur_tree_node.leaf_score
 
     def predict(self, features):
-        pool = Pool()
+        pool = Pool(self.num_thread)
         preds = pool.map(self._predict, features)
         pool.close()
         return np.array(preds)

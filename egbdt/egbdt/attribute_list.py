@@ -56,3 +56,4 @@ class AttributeList(object):
         del self.features, self.bin_structure, self.dataset_size
 
 #TODO: parallel construct_attribute_list
+#TODO: support nan value

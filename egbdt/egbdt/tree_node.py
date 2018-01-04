@@ -2,7 +2,11 @@ import numpy as np
 
 
 class TreeNode(object):
-    def __init__(self, name=1, depth=1, feature_dim=None, is_leaf=False):
+    def __init__(self,
+                 name=1,
+                 depth=1,
+                 feature_dim=None,
+                 is_leaf=False):
         self.name = name
         self.depth = depth
         self.feature_dim = feature_dim

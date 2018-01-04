@@ -6,7 +6,6 @@ import copy_reg
 import types
 
 
-
 # use copy_reg to make the instance method picklable,
 # because multiprocessing must pickle things to sling them among process
 def _pickle_method(m):

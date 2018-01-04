@@ -7,6 +7,11 @@ from class_list import ClassList
 from bining import BinStructure
 from sampling import RowSampler, ColumnSampler
 from time import time
+import logging
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(message)s', datefmt="[%H:%M:%S]")
+
 
 class TGBoost(object):
     """
@@ -27,6 +32,7 @@ class TGBoost(object):
         self.num_thread = None
         self.min_child_weight = None
         self.scale_pos_weight = None
+        self.eval_metric = None
 
     def fit(self,
             features,
@@ -76,7 +82,7 @@ class TGBoost(object):
         self.eval_metric = eval_metric
         self.min_child_weight = min_child_weight
         self.scale_pos_weight = scale_pos_weight
-        self.first_round_pred = 0.0
+        self.first_round_pred = 0
 
         # initial loss function
         if loss == "logisticloss":
@@ -123,7 +129,7 @@ class TGBoost(object):
             become_worse_round = 0
 
         # start learning
-        print "tgboost start training"
+        logging.info("TGBoost start training")
         for i in range(self.num_boost_round):
             t0 = time()
             # train current tree
@@ -147,7 +153,7 @@ class TGBoost(object):
 
             # print training information
             if self.eval_metric is None:
-                print "TGBoost round {iteration}".format(iteration=i)
+                logging.info("TGBoost round {iteration}".format(iteration=i))
             else:
                 try:
                     mertric_func = get_metric(self.eval_metric)
@@ -157,14 +163,13 @@ class TGBoost(object):
                 train_metric = mertric_func(self.loss.transform(class_list.pred), label)
 
                 if not do_validation:
-                    print "TGBoost round {iteration}, train-{eval_metric} is {train_metric}, time cost {tc}s".format(
-                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, tc=t1-t0)
+                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}, exec time {tc:.3f}s".format(
+                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, tc=t1-t0))
                 else:
                     val_pred += self.eta * tree.predict(val_features)
                     val_metric = mertric_func(self.loss.transform(val_pred), val_label)
-                    print "TGBoost round {iteration}, train-{eval_metric} is {train_metric}, val-{eval_metric} is {val_metric}, time cost {tc}s".format(
-                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, val_metric=val_metric, tc=t1-t0
-                    )
+                    logging.info("TGBoost round {iteration}, train-{eval_metric}: {train_metric:.4f}, val-{eval_metric}: {val_metric:.4f}, exec time {tc:.3f}s".format(
+                        iteration=i, eval_metric=self.eval_metric, train_metric=train_metric, val_metric=val_metric, tc=t1-t0))
 
                     # check whether to early stop
                     if maximize:
@@ -175,9 +180,8 @@ class TGBoost(object):
                         else:
                             become_worse_round += 1
                         if become_worse_round > early_stopping_rounds:
-                            print "TGBoost training Stop, best round is {best_round}, best {eval_metric} is {best_val_metric}, time cost {tc}s".format(
-                                best_round=best_round, eval_metric=eval_metric, best_val_metric=best_val_metric, tc=t1-t0
-                            )
+                            logging.info("TGBoost training Stop, best round is {best_round}, best {eval_metric} is {best_val_metric:.4f}".format(
+                                best_round=best_round, eval_metric=eval_metric, best_val_metric=best_val_metric))
                             break
                     else:
                         if val_metric < best_val_metric:
@@ -187,9 +191,8 @@ class TGBoost(object):
                         else:
                             become_worse_round += 1
                         if become_worse_round > early_stopping_rounds:
-                            print "TGBoost training Stop, best round is {best_round}, best val-{eval_metric} is {best_val_metric}s".format(
-                                best_round=best_round, eval_metric=eval_metric, best_val_metric=best_val_metric
-                            )
+                            logging.info("TGBoost training Stop, best round is {best_round}, best val-{eval_metric} is {best_val_metric:.4f}".format(
+                                best_round=best_round, eval_metric=eval_metric, best_val_metric=best_val_metric))
                             break
 
     def predict(self, features):

@@ -1,10 +1,10 @@
 from tree_node import TreeNode
-import Queue
 from multiprocessing import Pool
+from functools import partial
 import numpy as np
 import copy_reg
 import types
-
+from time import time
 
 # use copy_reg to make the instance method picklable,
 # because multiprocessing must pickle things to sling them among process
@@ -38,7 +38,8 @@ class Tree(object):
         self.gamma = gamma
         self.num_thread = num_thread
         self.feature_importance = {}
-        self.alive_nodes = Queue.Queue()
+        self.alive_nodes = []
+        self.name_to_node = {}
 
     def calculate_leaf_score(self, G, H):
         """
@@ -63,49 +64,74 @@ class Tree(object):
                       - G_total**2/(H_total+self.reg_lambda)) - self.gamma
         return gain
 
+    def _process_one_attribute_list(self, attribute_list, class_list, col):
+        """
+        this function is base for parallel using multiprocessing,
+        so all operation are read-only
+
+        """
+        ret = []
+        # linear scan this column's attribute list, bin by bin
+        col_attribute_list = attribute_list[col]
+        col_attribute_list_cutting_index = attribute_list.attribute_list_cutting_index[col]
+
+        for uint8_threshold in range(len(col_attribute_list_cutting_index) - 1):
+            start_ind = col_attribute_list_cutting_index[uint8_threshold]
+            end_ind = col_attribute_list_cutting_index[uint8_threshold + 1]
+            inds = col_attribute_list["index"][start_ind:end_ind]
+            tree_node_G_H = class_list.statistic_given_inds(inds)
+            ret.append((col, uint8_threshold, tree_node_G_H))
+
+        return ret
+
     def build(self, attribute_list, class_list, col_sampler, bin_structure):
-        while not self.alive_nodes.empty():
-            for col in col_sampler.col_selected:
-                # linear scan this column's attribute list, bin by bin
-                col_attribute_list = attribute_list[col]
-                col_attribute_list_cutting_index = attribute_list.attribute_list_cutting_index[col]
+        while len(self.alive_nodes) != 0:
+            # process each attribute list
+            func = partial(self._process_one_attribute_list, attribute_list, class_list)
+            pool = Pool()
+            rets = pool.map(func, col_sampler.col_selected)
+            pool.close()
 
-                for uint8_threshold in range(len(col_attribute_list_cutting_index)-1):
-                    start_ind = col_attribute_list_cutting_index[uint8_threshold]
-                    end_ind = col_attribute_list_cutting_index[uint8_threshold+1]
-                    inds = col_attribute_list["index"][start_ind:end_ind]
-                    tree_node_G_H = class_list.statistic_given_inds(inds)
-
-                    for tree_node in tree_node_G_H.keys():
-                        G, H = tree_node_G_H[tree_node]
+            # process the rets
+            for ret in rets:
+                for col, uint8_threshold, tree_node_G_H in ret:
+                    for tree_node_name in tree_node_G_H.keys():
+                        # get the original tree_node by tree_node_name using self.name_to_node
+                        tree_node = self.name_to_node[tree_node_name]
+                        G, H = tree_node_G_H[tree_node_name]
                         G_left, H_left = tree_node.get_Gleft_Hleft(col, G, H)
                         G_total, H_total = tree_node.Grad, tree_node.Hess
                         gain = self.calculate_split_gain(G_left, H_left, G_total, H_total)
                         tree_node.update_best_gain(col, uint8_threshold, bin_structure[col][uint8_threshold], gain)
 
             # once scan all column, we can get the best (feature,threshold,gain) for each alive tree node
-            cur_level_node_size = self.alive_nodes.qsize()
+            cur_level_node_size = len(self.alive_nodes)
             new_tree_nodes = []
+            treenode_leftinds = []
             for _ in range(cur_level_node_size):
-                tree_node = self.alive_nodes.get()
+                tree_node = self.alive_nodes.pop(0)
                 best_feature, best_uint8_threshold, best_threshold, best_gain = tree_node.get_best_feature_threshold_gain()
                 if best_gain > 0:
                     nan_direction = 0  # TODO
-                    left_child = TreeNode(depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
-                    right_child = TreeNode(depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    left_child = TreeNode(name=2*tree_node.name, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
+                    right_child = TreeNode(name=2*tree_node.name+1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
                     tree_node.internal_node_setter(best_feature, best_uint8_threshold, best_threshold, nan_direction, left_child, right_child)
 
-                    # update class_list.corresponding_tree_node
-                    # TODO: can update class list one pass? current implementation is num_treenode pass
+                    # to update class_list.corresponding_tree_node one pass, we should save (tree_node,left_inds)
                     left_inds = attribute_list[best_feature]["index"][0:attribute_list.attribute_list_cutting_index[best_feature][best_uint8_threshold+1]]
-                    class_list.update_corresponding_tree_node(tree_node, left_inds)
+                    treenode_leftinds.append((tree_node, set(left_inds)))
 
                     new_tree_nodes.append(left_child)
                     new_tree_nodes.append(right_child)
+                    self.name_to_node[left_child.name] = left_child
+                    self.name_to_node[right_child.name] = right_child
 
                 else:
                     leaf_score = self.calculate_leaf_score(tree_node.Grad, tree_node.Hess)
                     tree_node.leaf_node_setter(leaf_score)
+
+            # update class_list.corresponding_tree_node
+            class_list.update_corresponding_tree_node(treenode_leftinds)
 
             # update histogram(Grad,Hess,num_sample) for each alive(new) tree node
             class_list.update_histogram_for_tree_node()
@@ -121,7 +147,7 @@ class Tree(object):
                         or tree_node.num_sample <= self.min_sample_split:
                     tree_node.leaf_node_setter(self.calculate_leaf_score(tree_node.Grad, tree_node.Hess))
                 else:
-                    self.alive_nodes.put(tree_node)
+                    self.alive_nodes.append(tree_node)
 
     def fit(self, attribute_list, class_list, row_sampler, col_sampler, bin_structure):
         # when we start to fit a tree, we first conduct row and column sampling
@@ -130,13 +156,15 @@ class Tree(object):
         class_list.sampling(row_sampler.row_mask)
 
         # then we create the root node, initialize histogram(Gradient sum and Hessian sum)
-        root_node = TreeNode(depth=1, feature_dim=attribute_list.feature_dim)
+        root_node = TreeNode(name=1, depth=1, feature_dim=attribute_list.feature_dim)
         root_node.Grad_setter(class_list.grad.sum())
         root_node.Hess_setter(class_list.hess.sum())
         self.root = root_node
+        # every time a new node is created, we put it into self.name_to_node
+        self.name_to_node[root_node.name] = root_node
 
         # put it into the alive_node, and fill the class_list, all data are assigned to root node initially
-        self.alive_nodes.put(root_node)
+        self.alive_nodes.append(root_node)
         for i in range(class_list.dataset_size):
             class_list.corresponding_tree_node[i] = root_node
 

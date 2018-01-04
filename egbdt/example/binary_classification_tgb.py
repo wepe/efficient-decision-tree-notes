@@ -29,7 +29,7 @@ params = {'loss': "logisticloss",
           'reg_lambda': 10,
           'gamma': 0,
           'eval_metric': "error",
-          'early_stopping_rounds': 20,
+          'early_stopping_rounds': 2000,
           'maximize': False}
 
 tgb.fit(train_X, train_y, validation_data=(val_X, val_y), **params)

@@ -2,7 +2,8 @@ import numpy as np
 
 
 class TreeNode(object):
-    def __init__(self, depth=1, feature_dim=None, is_leaf=False):
+    def __init__(self, name=1, depth=1, feature_dim=None, is_leaf=False):
+        self.name = name
         self.depth = depth
         self.feature_dim = feature_dim
         self.is_leaf = is_leaf
@@ -80,3 +81,12 @@ class TreeNode(object):
         # clear not necessary instance attribute and methods
         del self.best_uint8_thresholds, self.best_thresholds, self.best_gains, \
             self.Grad, self.Hess, self.G_left, self.H_left, self.feature_dim
+
+
+"""
+about TreeNode.name, an example:
+      1
+    2   3
+  4  5 6  7
+name of the root node is 1, its left child's name is 2*root.name, its right child's name is 2*root.name+1
+"""

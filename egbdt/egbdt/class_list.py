@@ -35,18 +35,20 @@ class ClassList(object):
             if tree_node.is_leaf:
                 continue
             else:
-                if tree_node not in ret:
-                    ret[tree_node] = [0., 0.]
-                ret[tree_node][0] += self.grad[i]
-                ret[tree_node][1] += self.hess[i]
+                if tree_node.name not in ret:
+                    ret[tree_node.name] = [0., 0.]
+                ret[tree_node.name][0] += self.grad[i]
+                ret[tree_node.name][1] += self.hess[i]
         return ret
 
-    def update_corresponding_tree_node(self, tree_node, left_inds):
+    def update_corresponding_tree_node(self, treenode_leftinds):
         # scan the class list, if the data fall into tree_node
         # then we see whether its index is in left_inds or right_inds, update the corresponding tree node
+        map = dict(treenode_leftinds)
         for i in range(self.dataset_size):
-            if self.corresponding_tree_node[i] is tree_node:
-                if i in left_inds:
+            tree_node = self.corresponding_tree_node[i]
+            if not tree_node.is_leaf:
+                if i in map[tree_node]:
                     self.corresponding_tree_node[i] = tree_node.left_child
                 else:
                     self.corresponding_tree_node[i] = tree_node.right_child
@@ -59,3 +61,5 @@ class ClassList(object):
                 self.corresponding_tree_node[i].Grad_add(self.grad[i])
                 self.corresponding_tree_node[i].Hess_add(self.hess[i])
                 self.corresponding_tree_node[i].num_sample_add(1)
+
+# parallel above method

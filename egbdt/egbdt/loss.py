@@ -67,7 +67,7 @@ class LogisticLoss(BaseLoss):
         """
         logistic tranformation
         """
-        return 1.0/(1.0+np.exp(-preds))
+        return np.clip(1.0/(1.0+np.exp(-preds)),0.00001,0.99999)
 
     def grad(self, preds, labels):
         preds = self.transform(preds)

@@ -31,21 +31,19 @@ class BinStructure(object):
 
         self.feature_dim = features.shape[1]
         self.bins_upper_bounder = [{} for _ in range(self.feature_dim)]
+        self.data_selected = None
 
+        self.data_sampling()
         self.construct_bins_upper_bounder()
 
-    def data_sampling(self, col):
-        # sampling data from features[:,col], exclude those with nan value. return the selected index
-        arr = ~np.isnan(self.features[:, col])
-        arr = arr.nonzero()[0]
-        size = min(arr.shape[0], self.estimation_sampling)
-        return arr[np.random.choice(arr.shape[0], size, replace=False)]
+    def data_sampling(self):
+        self.data_selected = self.features[np.random.choice(self.features.shape[0], self.estimation_sampling, replace=False), :]
+        del self.features
 
     def construct_bins_upper_bounder(self):
         for i in range(self.feature_dim):
             distinct_value_cnt = {}
-            selected_inds = self.data_sampling(i)
-            for value in self.features[selected_inds, i]:
+            for value in self.data_selected[:, i]:
                 if distinct_value_cnt.has_key(value):
                     distinct_value_cnt[value] += 1
                 else:
@@ -63,7 +61,7 @@ class BinStructure(object):
                 # and those with the same distinct value should in the same bin
                 # we simply scan sorted_distinct_value, accumulate the cnt,
                 # when greater than avg,  these distinct value can be put into one bin, so we get its upper bounder
-                avg_cnt = int(len(selected_inds) / self.max_bin)
+                avg_cnt = int(self.data_selected.shape[0] / self.max_bin)
                 acc_cnt = 0
                 j = 0
                 for distinct_value in sorted_distinct_value:
@@ -75,7 +73,9 @@ class BinStructure(object):
                 if acc_cnt != 0:
                     self.bins_upper_bounder[i][j] = sorted_distinct_value[-1]
 
-        del self.features
+        del self.data_selected
 
     def __getitem__(self, item):
         return self.bins_upper_bounder[item]
+
+# when the input feature has nan, it become very slow

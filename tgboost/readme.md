@@ -10,6 +10,6 @@
 ### TODO
 - 完善更多特性，scale_pos_weight，feature_importance，cv等
 
-- 由于python多线程不能真正并行，所以只能用多进程．但多进程不共享内存空间，造成在并行处理attribute list时，不能共享同一份attribute list和class list，需要给每个subprocess复制一份，造成了内存消耗，以及速度降低．由于attribute list和class list里面有很复杂的数据结构类型，很难改写支持多进程共享的．所以这一点目前暂不知道如何解决．或许用C++或者Java，用多线程会更好
+- 由于python多线程不能真正并行，所以只能用多进程．但多进程不共享内存空间，造成在并行处理attribute list时，不能共享同一份attribute list和class list，需要给每个subprocess复制一份，造成了内存消耗，以及速度降低．由于attribute list和class list里面有很复杂的数据结构类型，很难改写支持多进程共享的．
 
 - 增加更多测试用例，验证缺失值的处理方式的优势

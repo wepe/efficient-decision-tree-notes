@@ -13,7 +13,7 @@ print train_X.shape, val_X.shape
 
 params = {'loss': "logisticloss",
           'eta': 0.3,
-          'max_depth': 7,
+          'max_depth': 6,
           'num_boost_round': 500,
           'scale_pos_weight': 1.0,
           'subsample': 0.8,

@@ -36,16 +36,22 @@ class Tree(object):
         self.rowsample = rowsample
         self.reg_lambda = reg_lambda
         self.gamma = gamma
-        self.feature_importance = {}
+        # self.feature_importance = {}
         self.alive_nodes = []
         self.name_to_node = {}
+        # number of tree node of this tree
         self.nodes_cnt = 0
+        # number of nan tree node of this tree
+        # nan tree node is the third child of the tree node
         self.nan_nodes_cnt = 0
 
         if num_thread == -1:
             self.num_thread = cpu_count()
         else:
             self.num_thread = num_thread
+
+        # to avoid divide zero
+        self.reg_lambda = max(self.reg_lambda, 0.00001)
 
     def calculate_leaf_score(self, G, H):
         """
@@ -61,9 +67,6 @@ class Tree(object):
         this gain is the loss reduction, We want it to be as large as possible.
 
         """
-        # to avoid divide zero
-        self.reg_lambda = max(self.reg_lambda, 0.00001)
-
         G_right = G_total - G_left - G_nan
         H_right = H_total - H_left - H_nan
 
@@ -95,6 +98,7 @@ class Tree(object):
             nan_go_to = 2  # right child
             gain = gain_3
 
+        # in this case, the trainset does not contains nan samples
         if H_nan == 0 and G_nan == 0:
             nan_go_to = 3
 
@@ -130,16 +134,20 @@ class Tree(object):
             rets = pool.map(func, col_sampler.col_selected)
             pool.close()
 
-            # process the rets
+            # for each attribute's ret
             for ret in rets:
+                # for each threshold of this attribute
                 for col, uint8_threshold, tree_node_G_H in ret:
+                    # for each related tree node
                     for tree_node_name in tree_node_G_H.keys():
                         # get the original tree_node by tree_node_name using self.name_to_node
                         tree_node = self.name_to_node[tree_node_name]
+
                         G, H = tree_node_G_H[tree_node_name]
                         G_left, H_left = tree_node.get_Gleft_Hleft(col, G, H)
                         G_total, H_total = tree_node.Grad, tree_node.Hess
                         G_nan, H_nan = tree_node.Grad_missing[col], tree_node.Hess_missing[col]
+
                         nan_go_to, gain = self.calculate_split_gain(G_left, H_left, G_nan, H_nan, G_total, H_total)
                         tree_node.update_best_gain(col, uint8_threshold, bin_structure[col][uint8_threshold], gain, nan_go_to)
 
@@ -148,22 +156,21 @@ class Tree(object):
             new_tree_nodes = []
             treenode_leftinds_naninds = []
             for _ in range(cur_level_node_size):
+                # for each current alive node, get its best splitting
                 tree_node = self.alive_nodes.pop(0)
                 best_feature, best_uint8_threshold, best_threshold, best_gain, best_nan_go_to = tree_node.get_best_feature_threshold_gain()
                 tree_node.nan_go_to = best_nan_go_to
+
                 if best_gain > 0:
                     left_child = TreeNode(name=3*tree_node.name-1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
                     right_child = TreeNode(name=3*tree_node.name+1, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
                     nan_child = None
+                    # this case we can create the nan child
                     if best_nan_go_to == 0:
                         nan_child = TreeNode(name=3*tree_node.name, depth=tree_node.depth+1, feature_dim=attribute_list.feature_dim)
                         self.nan_nodes_cnt += 1
+                    # this tree node is internal node
                     tree_node.internal_node_setter(best_feature, best_uint8_threshold, best_threshold, nan_child, left_child, right_child)
-
-                    # to update class_list.corresponding_tree_node one pass, we should save (tree_node,left_inds, nan_inds)
-                    left_inds = attribute_list[best_feature]["index"][0:attribute_list.attribute_list_cutting_index[best_feature][best_uint8_threshold+1]]
-                    nan_inds = attribute_list.missing_value_attribute_list[best_feature]
-                    treenode_leftinds_naninds.append((tree_node, (set(left_inds), set(nan_inds), best_nan_go_to)))
 
                     new_tree_nodes.append(left_child)
                     new_tree_nodes.append(right_child)
@@ -172,17 +179,24 @@ class Tree(object):
                     if nan_child is not None:
                         new_tree_nodes.append(nan_child)
                         self.name_to_node[nan_child.name] = nan_child
+
+                    # to update class_list.corresponding_tree_node one pass,
+                    # we should save (tree_node,left_inds, nan_inds)
+                    left_inds = attribute_list[best_feature]["index"][0:attribute_list.attribute_list_cutting_index[best_feature][best_uint8_threshold+1]]
+                    nan_inds = attribute_list.missing_value_attribute_list[best_feature]
+                    treenode_leftinds_naninds.append((tree_node, (set(left_inds), set(nan_inds), best_nan_go_to)))
                 else:
+                    # this tree node is leaf node
                     leaf_score = self.calculate_leaf_score(tree_node.Grad, tree_node.Hess)
                     tree_node.leaf_node_setter(leaf_score)
 
             # update class_list.corresponding_tree_node one pass
             class_list.update_corresponding_tree_node(treenode_leftinds_naninds)
 
-            # update histogram(Grad,Hess,num_sample) for each alive(new) tree node
+            # update histogram(Grad,Hess,num_sample) for each new tree node
             class_list.update_histogram_for_tree_node()
 
-            # update Grad_missing, Hess_missing for each alive(new) tree node
+            # update Grad_missing, Hess_missing for each new tree node
             for tree_node in new_tree_nodes:
                 tree_node.reset_Grad_Hess_missing()
             attribute_list.update_grad_hess_missing_for_tree_node(class_list)
@@ -232,6 +246,10 @@ class Tree(object):
         """
         cur_tree_node = self.root
         while not cur_tree_node.is_leaf:
+            # if the split feature's value of this sample is nan
+            # then we first check whether cur_tree_node.nan_child exist
+            # if exiist, then go to nan_child
+            # if not exist, check cur_tree_node.nan_go_to.
             if np.isnan(feature[cur_tree_node.split_feature]):
                 if cur_tree_node.nan_child is None:
                     if cur_tree_node.nan_go_to == 1:
@@ -239,6 +257,8 @@ class Tree(object):
                     elif cur_tree_node.nan_go_to == 2:
                         cur_tree_node = cur_tree_node.right_child
                     elif cur_tree_node.nan_go_to == 3:
+                        # Sudden fantasy
+                        # any other solution?
                         if cur_tree_node.left_child.num_sample > cur_tree_node.right_child.num_sample:
                             cur_tree_node = cur_tree_node.left_child
                         else:

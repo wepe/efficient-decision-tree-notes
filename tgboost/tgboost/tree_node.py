@@ -12,17 +12,20 @@ class TreeNode(object):
         self.feature_dim = feature_dim
         self.is_leaf = is_leaf
         self.num_sample = 0
+        # the gradient/hessian sum of the samples fall into this tree node
         self.Grad = 0
         self.Hess = 0
+        # for split finding, record the gradient/hessian sum of the left
         self.G_left = [0 for _ in range(self.feature_dim)]
         self.H_left = [0 for _ in range(self.feature_dim)]
+        # when split finding, record the best threshold, gain, missing value's branch for each feature
         self.best_uint8_thresholds = [None for _ in range(self.feature_dim)]
         self.best_thresholds = [None for _ in range(self.feature_dim)]
         self.best_gains = [-np.inf for _ in range(self.feature_dim)]
         self.best_nan_go_to = [None for _ in range(self.feature_dim)]
         self.nan_go_to = None
         # some data fall into this tree node
-        # for each feature of these data, which is missing value, and their gradient sum, hessian sum
+        # gradient sum, hessian sum of those with missing value for each feature
         self.Grad_missing = [0 for _ in range(self.feature_dim)]
         self.Hess_missing = [0 for _ in range(self.feature_dim)]
 
@@ -92,10 +95,6 @@ class TreeNode(object):
         self.is_leaf = is_leaf
         self.leaf_score = leaf_score
         self.clean_up()
-
-    # def empty_node_setter(self):
-    #     self.is_empty = True
-    #     self.clean_up()
 
     def clean_up(self):
         # clear not necessary instance attribute and methods

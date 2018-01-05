@@ -6,7 +6,6 @@ from attribute_list import AttributeList
 from class_list import ClassList
 from bining import BinStructure
 from sampling import RowSampler, ColumnSampler
-from time import time
 import logging
 
 
@@ -37,7 +36,7 @@ class TGBoost(object):
     def fit(self,
             features,
             label,
-            validation_data=(None,None),
+            validation_data=(None, None),
             early_stopping_rounds=np.inf,
             maximize=True,
             eval_metric=None,
@@ -145,9 +144,10 @@ class TGBoost(object):
             # when finish building this tree, update the class_list.pred, grad, hess
             class_list.update_pred(self.eta)
             class_list.update_grad_hess(self.loss)
+
             # save this tree
             self.trees.append(tree)
-            logging.info("current tree has {} nodes, {} nan tree nodes, avg hessian value {}".format(tree.nodes_cnt, tree.nan_nodes_cnt, class_list.hess.mean()))
+            logging.info("current tree has {} nodes, {} nan tree nodes".format(tree.nodes_cnt, tree.nan_nodes_cnt))
 
             # print training information
             if self.eval_metric is None:

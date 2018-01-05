@@ -9,10 +9,14 @@ class AttributeList(object):
         self.dataset_size = features.shape[0]
 
         self.feature_missing_cnt = self.missing_value_count()
+        # for each feature, store the sample index of those with missing value,
         self.missing_value_attribute_list = [np.empty((self.feature_missing_cnt[i], ), dtype="int32") for i in range(self.feature_dim)]
 
+        # for each feature, maintain an attribute list (attribute value, index)
         self.attribute_list = [np.empty((self.dataset_size-self.feature_missing_cnt[i],),
                                         dtype=[("attribute", "uint8"), ("index", "int32")]) for i in range(self.feature_dim)]
+        # each feature is bining and store in attribute list in order
+        # so attribute_list_cutting_index store the cutting index for each feature
         self.attribute_list_cutting_index = [[] for _ in range(self.feature_dim)]
 
         self.bin_structure = bin_structure
@@ -27,7 +31,7 @@ class AttributeList(object):
 
     def construct_attribute_list(self):
         for i in range(self.feature_dim):
-            # scan each feature, see each example fall into which bin
+            # scan each feature, see which bin each example fall into
             bin_upper_bounder = sorted(self.bin_structure[i].values())
             bin_upper_bounder[-1] = np.inf
             bin_number = len(bin_upper_bounder)
@@ -39,7 +43,7 @@ class AttributeList(object):
 
                 if np.isnan(value):
                     missing_value_index.append(index)
-                    break
+                    continue
 
                 # binary search
                 low, high = 0, bin_number-1
@@ -55,7 +59,7 @@ class AttributeList(object):
                 if low == high:
                     bin_example_index[low].append(index)
 
-            # fill the attribute list for this feature
+            # fill the attribute list and the attribute_list_cutting_index for this feature
             acc_cnt = 0
             self.attribute_list_cutting_index[i].append(acc_cnt)
             for k in range(bin_number):
@@ -66,7 +70,7 @@ class AttributeList(object):
                 self.attribute_list_cutting_index[i].append(acc_cnt)
 
             # fill the missing value attribute list for this feature
-            self.missing_value_attribute_list[i] = missing_value_index
+            self.missing_value_attribute_list[i][:] = missing_value_index
 
         self.clean_up()
 

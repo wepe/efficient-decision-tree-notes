@@ -19,12 +19,14 @@ class TreeNode(object):
         self.best_uint8_thresholds = [None for _ in range(self.feature_dim)]
         self.best_thresholds = [None for _ in range(self.feature_dim)]
         self.best_gains = [-np.inf for _ in range(self.feature_dim)]
+        self.best_nan_go_to = [None for _ in range(self.feature_dim)]
+        self.nan_go_to = None
         # some data fall into this tree node
         # for each feature of these data, which is missing value, and their gradient sum, hessian sum
         self.Grad_missing = [0 for _ in range(self.feature_dim)]
         self.Hess_missing = [0 for _ in range(self.feature_dim)]
 
-        self.is_empty = False
+        # self.is_empty = False
 
     def reset_Grad_Hess_missing(self):
         self.Grad_missing = [0 for _ in range(self.feature_dim)]
@@ -54,16 +56,17 @@ class TreeNode(object):
         self.H_left[col] += H
         return self.G_left[col], self.H_left[col]
 
-    def update_best_gain(self, col, uint8_threshold, threshold, gain):
+    def update_best_gain(self, col, uint8_threshold, threshold, gain, nan_go_to):
         if gain > self.best_gains[col]:
             self.best_gains[col] = gain
             self.best_thresholds[col] = threshold
             self.best_uint8_thresholds[col] = uint8_threshold
+            self.best_nan_go_to[col] = nan_go_to
 
     def get_best_feature_threshold_gain(self):
         best_feature = self.best_gains.index(max(self.best_gains))
         return best_feature, self.best_uint8_thresholds[best_feature], \
-               self.best_thresholds[best_feature], self.best_gains[best_feature]
+               self.best_thresholds[best_feature], self.best_gains[best_feature], self.best_nan_go_to[best_feature]
 
     def internal_node_setter(self, feature, uint8_threshold, threshold, nan_child, left_child, right_child, is_leaf=False):
         """
@@ -90,9 +93,9 @@ class TreeNode(object):
         self.leaf_score = leaf_score
         self.clean_up()
 
-    def empty_node_setter(self):
-        self.is_empty = True
-        self.clean_up()
+    # def empty_node_setter(self):
+    #     self.is_empty = True
+    #     self.clean_up()
 
     def clean_up(self):
         # clear not necessary instance attribute and methods

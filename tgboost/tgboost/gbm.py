@@ -147,7 +147,7 @@ class TGBoost(object):
             class_list.update_grad_hess(self.loss)
             # save this tree
             self.trees.append(tree)
-            logging.info("this tree has {} nodes".format(tree.max_name))
+            logging.info("current tree has {} nodes, {} nan tree nodes, avg hessian value {}".format(tree.nodes_cnt, tree.nan_nodes_cnt, class_list.hess.mean()))
 
             # print training information
             if self.eval_metric is None:

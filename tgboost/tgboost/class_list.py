@@ -52,10 +52,16 @@ class ClassList(object):
             if not tree_node.is_leaf:
                 left_inds = map[tree_node][0]
                 nan_inds = map[tree_node][1]
+                nan_go_to = map[tree_node][2]
                 if i in left_inds:
                     self.corresponding_tree_node[i] = tree_node.left_child
                 elif i in nan_inds:
-                    self.corresponding_tree_node[i] = tree_node.nan_child
+                    if nan_go_to == 0:
+                        self.corresponding_tree_node[i] = tree_node.nan_child
+                    elif nan_go_to == 1:
+                        self.corresponding_tree_node[i] = tree_node.left_child
+                    else:
+                        self.corresponding_tree_node[i] = tree_node.right_child
                 else:
                     self.corresponding_tree_node[i] = tree_node.right_child
 

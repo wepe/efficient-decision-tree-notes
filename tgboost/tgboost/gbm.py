@@ -147,7 +147,7 @@ class TGBoost(object):
 
             # save this tree
             self.trees.append(tree)
-            logging.info("current tree has {} nodes, {} nan tree nodes".format(tree.nodes_cnt, tree.nan_nodes_cnt))
+            logging.debug("current tree has {} nodes, {} nan tree nodes".format(tree.nodes_cnt, tree.nan_nodes_cnt))
 
             # print training information
             if self.eval_metric is None:

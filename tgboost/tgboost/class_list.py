@@ -69,9 +69,16 @@ class ClassList(object):
         # scan the class list
         # update histogram(Grad,Hess,num_sample) for each alive(new) tree node
         for i in range(self.dataset_size):
-            if not self.corresponding_tree_node[i].is_leaf:
-                self.corresponding_tree_node[i].Grad_add(self.grad[i])
-                self.corresponding_tree_node[i].Hess_add(self.hess[i])
-                self.corresponding_tree_node[i].num_sample_add(1)
+            tree_node = self.corresponding_tree_node[i]
+            if not tree_node.is_leaf:
+                tree_node.Grad_add(self.grad[i])
+                tree_node.Hess_add(self.hess[i])
+                tree_node.num_sample_add(1)
 
-# parallel above method
+    def update_grad_hess_missing_for_tree_node(self, missing_value_attribute_list):
+        for col in range(len(missing_value_attribute_list)):
+            for i in missing_value_attribute_list[col]:
+                tree_node = self.corresponding_tree_node[i]
+                if not tree_node.is_leaf:
+                    tree_node.Grad_missing[col] += self.grad[i]
+                    tree_node.Hess_missing[col] += self.hess[i]

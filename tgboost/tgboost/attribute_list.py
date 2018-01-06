@@ -74,22 +74,9 @@ class AttributeList(object):
 
         self.clean_up()
 
-    def update_grad_hess_missing_for_tree_node(self, class_list):
-        # scan all missing_value_attribute_list
-        for col in range(self.feature_dim):
-            all_missing_inds = self.missing_value_attribute_list[col]
-            for i in all_missing_inds:
-                tree_node = class_list.corresponding_tree_node[i]
-                if not tree_node.is_leaf:
-                    tree_node.Grad_missing[col] += class_list.grad[i]
-                    tree_node.Hess_missing[col] += class_list.hess[i]
-
     def __getitem__(self, item):
         return self.attribute_list[item]
 
     def clean_up(self):
         # clear not necessary instance attribute
         del self.features, self.bin_structure, self.dataset_size
-
-#TODO: parallel construct_attribute_list
-#TODO: support nan value

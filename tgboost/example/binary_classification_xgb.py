@@ -1,6 +1,7 @@
 import xgboost as xgb
 import pandas as pd
 
+# data set : https://pan.baidu.com/s/1c23gJkc?errno=0&errmsg=Auth%20Login%20Sucess&&bduss=&ssnerror=0&traceid=
 train = pd.read_csv('../../train.csv')
 val = pd.read_csv('../../test.csv')
 
@@ -26,8 +27,7 @@ params = {'booster':'gbtree',
           'lambda': 1,
           'gamma': 0.01,
           'eval_metric': "error",
-          'maximize': False,
-          'num_thread': 16}
+          'maximize': False}
 
 watchlist = [(dval, 'val')]
 model = xgb.train(params, dtrain,num_boost_round=10000, early_stopping_rounds=20, evals=watchlist)

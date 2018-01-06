@@ -4,6 +4,7 @@ from functools import partial
 import numpy as np
 import copy_reg
 import types
+from time import time
 
 
 # use copy_reg to make the instance method picklable,
@@ -104,7 +105,7 @@ class Tree(object):
 
         return nan_go_to, gain
 
-    def _process_one_attribute_list(self, attribute_list, class_list, col):
+    def _process_one_attribute_list(self, class_list, (col_attribute_list, col_attribute_list_cutting_index, col)):
         """
         this function is base for parallel using multiprocessing,
         so all operation are read-only
@@ -112,26 +113,26 @@ class Tree(object):
         """
         ret = []
         # linear scan this column's attribute list, bin by bin
-        col_attribute_list = attribute_list[col]
-        col_attribute_list_cutting_index = attribute_list.attribute_list_cutting_index[col]
-
         for uint8_threshold in range(len(col_attribute_list_cutting_index) - 1):
             start_ind = col_attribute_list_cutting_index[uint8_threshold]
             end_ind = col_attribute_list_cutting_index[uint8_threshold + 1]
             inds = col_attribute_list["index"][start_ind:end_ind]
             tree_node_G_H = class_list.statistic_given_inds(inds)
             ret.append((col, uint8_threshold, tree_node_G_H))
-
         return ret
 
     def build(self, attribute_list, class_list, col_sampler, bin_structure):
         while len(self.alive_nodes) != 0:
             self.nodes_cnt += len(self.alive_nodes)
-
-            # scan each attribute list
-            func = partial(self._process_one_attribute_list, attribute_list, class_list)
+            # scan each selected attribute list
+            attributes = []
+            for col in col_sampler.col_selected:
+                col_attribute_list = attribute_list[col]
+                col_attribute_list_cutting_index = attribute_list.attribute_list_cutting_index[col]
+                attributes.append((col_attribute_list, col_attribute_list_cutting_index, col))
+            func = partial(self._process_one_attribute_list, class_list)
             pool = Pool(self.num_thread)
-            rets = pool.map(func, col_sampler.col_selected)
+            rets = pool.map(func, attributes)
             pool.close()
 
             # for each attribute's ret
@@ -191,6 +192,7 @@ class Tree(object):
                     tree_node.leaf_node_setter(leaf_score)
 
             # update class_list.corresponding_tree_node one pass
+
             class_list.update_corresponding_tree_node(treenode_leftinds_naninds)
 
             # update histogram(Grad,Hess,num_sample) for each new tree node
@@ -199,7 +201,7 @@ class Tree(object):
             # update Grad_missing, Hess_missing for each new tree node
             for tree_node in new_tree_nodes:
                 tree_node.reset_Grad_Hess_missing()
-            attribute_list.update_grad_hess_missing_for_tree_node(class_list)
+            class_list.update_grad_hess_missing_for_tree_node(attribute_list.missing_value_attribute_list)
 
             # process the new tree nodes
             # satisfy max_depth? min_child_weight? min_sample_split?

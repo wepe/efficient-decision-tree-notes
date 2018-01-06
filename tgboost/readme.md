@@ -101,3 +101,5 @@ tgb.fit(train_X, train_y, validation_data=(val_X, val_y), **params)
 
 - [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/abs/1603.02754)
 - [SLIQ: A Fast Scalable Classifier for Data Mining](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.7734&rep=rep1&type=pdf)
+
+- [GBDT算法原理与系统设计简介](http://wepon.me/files/gbdt.pdf)

@@ -4,7 +4,7 @@ from tree import Tree
 from metric import get_metric
 from attribute_list import AttributeList
 from class_list import ClassList
-from bining import BinStructure
+from binning import BinStructure
 from sampling import RowSampler, ColumnSampler
 import logging
 

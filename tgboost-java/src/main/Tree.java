@@ -1,7 +1,5 @@
 package main;
 
-import test.tree;
-
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -23,13 +21,13 @@ public class Tree {
 
 
     public Tree(int min_sample_split,
-                double min_child_weight,
-                int max_depth,
-                double colsample,
-                double rowsample,
-                double lambda,
-                double gamma,
-                int num_thread){
+                    double min_child_weight,
+                    int max_depth,
+                    double colsample,
+                    double rowsample,
+                    double lambda,
+                    double gamma,
+                    int num_thread){
         this.min_sample_split = min_sample_split;
         this.min_child_weight = min_child_weight;
         this.max_depth = max_depth;
@@ -62,21 +60,21 @@ public class Tree {
         //if we let those with missing value go to a nan child
         double gain_1 = 0.5 * (
                 Math.pow(G_left,2)/(H_left+lambda)
-                + Math.pow(G_right,2)/(H_right+lambda)
-                + Math.pow(G_nan,2)/(H_nan+lambda)
-                - Math.pow(G_total,2)/(H_total+lambda)) - gamma;
+                        + Math.pow(G_right,2)/(H_right+lambda)
+                        + Math.pow(G_nan,2)/(H_nan+lambda)
+                        - Math.pow(G_total,2)/(H_total+lambda))-gamma;
 
         //if we let those with missing value go to left child
         double gain_2 = 0.5 * (
                 Math.pow(G_left+G_nan,2)/(H_left+H_nan+lambda)
-                + Math.pow(G_right,2)/(H_right+lambda)
-                - Math.pow(G_total,2)/(H_total+lambda)) - gamma;
+                        + Math.pow(G_right,2)/(H_right+lambda)
+                        - Math.pow(G_total,2)/(H_total+lambda))-gamma;
 
         //if we let those with missing value go to right child
         double gain_3 = 0.5 * (
                 Math.pow(G_left,2)/(H_left+lambda)
-                + Math.pow(G_right+G_nan,2)/(H_right+H_nan+lambda)
-                - Math.pow(G_total,2)/(H_total+lambda)) - gamma;
+                        + Math.pow(G_right+G_nan,2)/(H_right+H_nan+lambda)
+                        - Math.pow(G_total,2)/(H_total+lambda))-gamma;
 
         double nan_go_to;
         double gain = Math.max(gain_1,Math.max(gain_2,gain_3));
@@ -124,72 +122,75 @@ public class Tree {
 
 
         //update Grad_missing Hess_missing for root node
-//        for(int p=0;p<root_node.Grad_missing.length;p++){
-//            System.out.print(root_node.Grad_missing[p]);
-//            System.out.print(",");
-//        }
-//        System.out.println();
         class_list.update_grad_hess_missing_for_tree_node(attribute_list.missing_value_attribute_list);
-//        for(int p=0;p<root_node.Grad_missing.length;p++){
-//            System.out.print(root_node.Grad_missing[p]);
-//            System.out.print(",");
-//        }
-//        System.out.println();
 
         //then build the tree util there is no alive tree_node to split
         build(attribute_list,class_list,col_sampler);
         clean_up();
     }
 
+    class ProcessEachAttributeList implements Runnable{
+        public int col;
+        public AttributeList attribute_list;
+        public ClassList class_list;
+        public ProcessEachAttributeList(int col,AttributeList attribute_list,ClassList class_list){
+            this.col = col;
+            this.attribute_list = attribute_list;
+            this.class_list = class_list;
+        }
+
+        @Override
+        public void run(){
+            for(int interval=0;interval<attribute_list.cutting_inds[col].length-1;interval++){
+                //update the corresponding treenode's G_left,H_left with this inds's sample
+                int[] inds = attribute_list.cutting_inds[col][interval];
+
+                HashSet<TreeNode> nodes = new HashSet<>();
+                for(int ind:inds){
+                    TreeNode treenode = class_list.corresponding_tree_node[ind];
+                    if(treenode.is_leaf) continue;
+
+                    nodes.add(treenode);
+                    treenode.G_left[col] += class_list.grad[ind];
+                    treenode.H_left[col] += class_list.hess[ind];
+                }
+                //update each treenode's best split using this feature
+                for(TreeNode node:nodes){
+                    double G_left = node.G_left[col];
+                    double H_left = node.H_left[col];
+                    double G_total = node.Grad;
+                    double H_total = node.Hess;
+                    double G_nan = node.Grad_missing[col];
+                    double H_nan = node.Hess_missing[col];
+                    double[] ret = calculate_split_gain(G_left,H_left,G_nan,H_nan,G_total,H_total);
+                    double nan_go_to = ret[0];
+                    double gain = ret[1];
+                    node.update_best_split(col,attribute_list.cutting_thresholds[col][interval],gain,nan_go_to);
+                }
+            }
+
+        }
+    }
+
 
     public void build(AttributeList attribute_list,
                       ClassList class_list,
                       ColumnSampler col_sampler){
-
         while(!alive_nodes.isEmpty()){
             nodes_cnt += alive_nodes.size();
 
-            //scan and process each selected attribute list
+            //parallelly scan and process each selected attribute list
+            ExecutorService pool = Executors.newFixedThreadPool(num_thread);
             for(int col:col_sampler.col_selected){
-                for(int interval=0;interval<attribute_list.cutting_inds[col].length-1;interval++){
-                    //update the corresponding treenode's G_left,H_left with this inds's sample
-                    int[] inds = attribute_list.cutting_inds[col][interval];
-
-                    HashSet<Integer> indexs = new HashSet<>();
-                    ArrayList<TreeNode> nodes = new ArrayList<>();
-                    for(int ind:inds){
-                        TreeNode treenode = class_list.corresponding_tree_node[ind];
-                        if(treenode.is_leaf) continue;
-
-                        if(!indexs.contains(treenode.index)){
-                            indexs.add(treenode.index);
-                            nodes.add(treenode);
-                        }
-
-
-                        treenode.G_left[col] += class_list.grad[ind];
-                        treenode.H_left[col] += class_list.hess[ind];
-                    }
-
-                    //update each treenode's best split using this feature
-                    for(int p=0;p<nodes.size();p++){
-                        TreeNode node = nodes.get(p);
-                        double G_left = node.G_left[col];
-                        double H_left = node.H_left[col];
-                        double G_total = node.Grad;
-                        double H_total = node.Hess;
-                        double G_nan = node.Grad_missing[col];
-                        double H_nan = node.Hess_missing[col];
-                        double[] ret = calculate_split_gain(G_left,H_left,G_nan,H_nan,G_total,H_total);
-                        double nan_go_to = ret[0];
-                        double gain = ret[1];
-                        node.update_best_split(col,attribute_list.cutting_thresholds[col][interval],gain,nan_go_to);
-                    }
-                }
-
-
+                pool.execute(new ProcessEachAttributeList(col,attribute_list,class_list));
             }
 
+            pool.shutdown();
+            try {
+                pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             //once had scan all column, we can get the best (feature,threshold,gain) for each alive tree node
             int cur_level_node_size = alive_nodes.size();
@@ -198,7 +199,6 @@ public class Tree {
             for(int i=0;i<cur_level_node_size;i++){
                 //pop each alive treenode
                 TreeNode treenode = alive_nodes.poll();
-
                 double[] ret = treenode.get_best_feature_threshold_gain();
                 double best_feature = ret[0];
                 double best_threshold = ret[1];
@@ -210,7 +210,6 @@ public class Tree {
                     double leaf_score = calculate_leaf_score(treenode.Grad,treenode.Hess);
                     treenode.leaf_node_setter(leaf_score,true);
                 }else {
-
                     //this node is internal node
                     TreeNode left_child = new TreeNode(3*treenode.index-1,treenode.depth+1,treenode.feature_dim,false);
                     TreeNode right_child = new TreeNode(3*treenode.index+1,treenode.depth+1,treenode.feature_dim,false);
@@ -334,3 +333,4 @@ public class Tree {
     }
 
 }
+

@@ -38,7 +38,7 @@ public class Metric {
         double n_pos = 0;
         for(double v:label) n_pos+=v;
         double n_neg = pred.length - n_pos;
-        double total_pair = n_neg * n_pos;
+//        double total_pair = n_neg * n_pos;
 
         double[][] label_pred = new double[pred.length][2];
         for(int i=0;i<pred.length;i++){
@@ -62,7 +62,7 @@ public class Metric {
                 accumulated_neg += 1;
             }
         }
-        return satisfied_pair / total_pair;
+        return satisfied_pair / n_neg / n_pos;
 
     }
 

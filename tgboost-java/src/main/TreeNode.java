@@ -48,19 +48,16 @@ public class TreeNode {
         this.depth = depth;
         this.feature_dim = feature_dim;
         this.is_leaf = is_leaf;
-        G_left = new double[feature_dim];
-        H_left = new double[feature_dim];
-        best_thresholds = new double[feature_dim];
-        best_gains = new double[feature_dim];
-        best_nan_go_to = new double[feature_dim];
-        Grad_missing = new double[feature_dim];
-        Hess_missing = new double[feature_dim];
+        this.G_left = new double[feature_dim];
+        this.H_left = new double[feature_dim];
+        this.best_thresholds = new double[feature_dim];
+        this.best_gains = new double[feature_dim];
+        this.best_nan_go_to = new double[feature_dim];
+        this.Grad_missing = new double[feature_dim];
+        this.Hess_missing = new double[feature_dim];
 
-    }
+        Arrays.fill(this.best_gains,-Double.MAX_VALUE);
 
-    public void reset_Grad_Hess_missing(){
-        Arrays.fill(Grad_missing,0.0);
-        Arrays.fill(Hess_missing,0.0);
     }
 
     public void Grad_add(double value){
@@ -83,17 +80,12 @@ public class TreeNode {
         Hess = value;
     }
 
-    public void num_sample_setter(int value){
-        num_sample = value;
+    public void reset_Grad_Hess_missing(){
+        Arrays.fill(this.Grad_missing,0.0);
+        Arrays.fill(this.Hess_missing,0.0);
     }
 
-    public double[] get_Gleft_Hleft(int col,double G,double H){
-        G_left[col] += G;
-        H_left[col] += H;
-        return new double[]{G_left[col],H_left[col]};
-    }
-
-    public void update_best_gain(int col,double threshold,double gain,double nan_go_to){
+    public void update_best_split(int col,double threshold,double gain,double nan_go_to){
         if(gain > best_gains[col]){
             best_gains[col] = gain;
             best_thresholds[col] = threshold;
@@ -103,7 +95,7 @@ public class TreeNode {
 
     public double[] get_best_feature_threshold_gain(){
         int best_feature = 0;
-        double max_gain = -1.0;
+        double max_gain = -Double.MAX_VALUE;
         for(int i=0;i<feature_dim;i++){
             if(best_gains[i]>max_gain){
                 max_gain = best_gains[i];
@@ -114,10 +106,11 @@ public class TreeNode {
         return new double[]{best_feature,best_thresholds[best_feature],max_gain,best_nan_go_to[best_feature]};
     }
 
-    public void internal_node_setter(int feature,double threshold,TreeNode nan_child,
+    public void internal_node_setter(double feature,double threshold,double nan_go_to,TreeNode nan_child,
                                      TreeNode left_child,TreeNode right_child,boolean is_leaf){
-        this.split_feature = feature;
+        this.split_feature = (int) feature;
         this.split_threshold = threshold;
+        this.nan_go_to = nan_go_to;
         this.nan_child = nan_child;
         this.left_child = left_child;
         this.right_child = right_child;

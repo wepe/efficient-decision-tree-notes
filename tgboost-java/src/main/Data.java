@@ -18,6 +18,7 @@ public class Data {
     public int feature_dim;
     public int dataset_size;
     public ArrayList<Integer> missing_count = new ArrayList<>();
+    public Double[][] origin_data;
 
     public Data(String file){
         first_scan(file);
@@ -51,11 +52,13 @@ public class Data {
         }
     }
 
-    //to obtain:feature_value_index,label,missing_index
+    //to obtain:feature_value_index,label,missing_index,origin_data
     private void second_scan(String file){
         label = new double[dataset_size];
         missing_index = new int[feature_dim][];
         feature_value_index = new double[feature_dim][][];
+        origin_data = new Double[dataset_size][feature_dim];
+
         for(int i=0;i<feature_dim;i++){
             int cnt = missing_count.get(i);
             missing_index[i] = new int[cnt];
@@ -79,10 +82,14 @@ public class Data {
                     if(strs[col].equals("")){
                         missing_index[col][cur_missing_index[col]] = row;
                         cur_missing_index[col] += 1;
+
+                        origin_data[row][col] = null;
                     }else{
                         feature_value_index[col][cur_index[col]][0] = Double.parseDouble(strs[col]);
                         feature_value_index[col][cur_index[col]][1] = row;
                         cur_index[col] += 1;
+
+                        origin_data[row][col] = Double.parseDouble(strs[col]);
                     }
                 }
 

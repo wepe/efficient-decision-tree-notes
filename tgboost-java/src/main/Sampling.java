@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.List;
 
 class RowSampler{
-    public ArrayList<Byte> row_mask = new ArrayList<>();
+    public ArrayList<Double> row_mask = new ArrayList<>();
 
     public RowSampler(int n, double sampling_rate){
         for(int i=0;i<n;i++){
-            this.row_mask.add((byte) (Math.random()<=sampling_rate? 1 : 0));
+            this.row_mask.add(Math.random()<=sampling_rate? 1.0 : 0.0);
         }
     }
 
@@ -46,7 +46,7 @@ public class Sampling {
         rs.shuffle();
         System.out.println(rs.row_mask.subList(0,20));
         int sum = 0;
-        for(int v:rs.row_mask){
+        for(double v:rs.row_mask){
             sum += v;
         }
         System.out.println(sum);

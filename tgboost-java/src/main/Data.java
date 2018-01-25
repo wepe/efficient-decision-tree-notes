@@ -11,16 +11,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Data {
+public class Data{
+    //Nothing to do
+}
+
+class TrainData extends Data{
     public double[][][] feature_value_index;
     public double[] label;
     public int[][] missing_index;
     public int feature_dim;
     public int dataset_size;
     public ArrayList<Integer> missing_count = new ArrayList<>();
-    public Double[][] origin_data;
+    public Double[][] origin_feature;
 
-    public Data(String file){
+    public TrainData(String file){
         first_scan(file);
         second_scan(file);
     }
@@ -57,7 +61,7 @@ public class Data {
         label = new double[dataset_size];
         missing_index = new int[feature_dim][];
         feature_value_index = new double[feature_dim][][];
-        origin_data = new Double[dataset_size][feature_dim];
+        origin_feature = new Double[dataset_size][feature_dim];
 
         for(int i=0;i<feature_dim;i++){
             int cnt = missing_count.get(i);
@@ -83,19 +87,121 @@ public class Data {
                         missing_index[col][cur_missing_index[col]] = row;
                         cur_missing_index[col] += 1;
 
-                        origin_data[row][col] = null;
+                        origin_feature[row][col] = null;
                     }else{
                         feature_value_index[col][cur_index[col]][0] = Double.parseDouble(strs[col]);
                         feature_value_index[col][cur_index[col]][1] = row;
                         cur_index[col] += 1;
 
-                        origin_data[row][col] = Double.parseDouble(strs[col]);
+                        origin_feature[row][col] = Double.parseDouble(strs[col]);
                     }
                 }
-
             }
         }catch (IOException e){
             e.printStackTrace();
         }
     }
+}
+
+
+class ValidationData extends Data{
+    public int feature_dim;
+    public int dataset_size;
+    public Double[][] origin_feature;
+    public double[] label;
+
+    public ValidationData(String file){
+        first_scan(file);
+        second_scan(file);
+    }
+
+    private void first_scan(String file){
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String header = br.readLine();
+            feature_dim = header.split(",").length - 1;
+
+            String line;
+            dataset_size = 0;
+            while((line = br.readLine()) != null){
+                dataset_size += 1;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void second_scan(String file){
+        label = new double[dataset_size];
+        origin_feature = new Double[dataset_size][feature_dim];
+
+        try{
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            br.readLine();
+            for(int row=0;row<dataset_size;row++){
+                String[] strs = br.readLine().split(",");
+                label[row] = Double.parseDouble(strs[strs.length-1]);
+                for(int col=0;col<feature_dim;col++){
+                    if(strs[col].equals("")){
+                        origin_feature[row][col] = null;
+                    }else{
+                        origin_feature[row][col] = Double.parseDouble(strs[col]);
+                    }
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+}
+
+
+class TestData extends Data{
+    public int feature_dim;
+    public int dataset_size;
+    public Double[][] origin_feature;
+
+    public TestData(String file){
+        first_scan(file);
+        second_scan(file);
+    }
+
+    private void first_scan(String file){
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String header = br.readLine();
+            feature_dim = header.split(",").length;
+
+            String line;
+            dataset_size = 0;
+            while((line = br.readLine()) != null){
+                dataset_size += 1;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void second_scan(String file){
+        origin_feature = new Double[dataset_size][feature_dim];
+
+        try{
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            br.readLine();
+            for(int row=0;row<dataset_size;row++){
+                String[] strs = br.readLine().split(",");
+                for(int col=0;col<feature_dim;col++){
+                    if(strs[col].equals("")){
+                        origin_feature[row][col] = null;
+                    }else{
+                        origin_feature[row][col] = Double.parseDouble(strs[col]);
+                    }
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
 }

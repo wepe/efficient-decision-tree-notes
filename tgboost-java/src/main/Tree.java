@@ -120,7 +120,6 @@ public class Tree {
             class_list.corresponding_tree_node[i] = root_node;
         }
 
-
         //update Grad_missing Hess_missing for root node
         class_list.update_grad_hess_missing_for_tree_node(attribute_list.missing_value_attribute_list);
 
@@ -196,6 +195,7 @@ public class Tree {
             int cur_level_node_size = alive_nodes.size();
             Queue<TreeNode> new_tree_nodes = new LinkedList<>();
 
+            //time consumption: 0.0x ms
             for(int i=0;i<cur_level_node_size;i++){
                 //pop each alive treenode
                 TreeNode treenode = alive_nodes.poll();
@@ -227,7 +227,6 @@ public class Tree {
                         new_tree_nodes.offer(nan_child);
                     }
                 }
-
             }
 
             //update class_list.corresponding_tree_node
@@ -240,6 +239,7 @@ public class Tree {
             for(TreeNode node:new_tree_nodes){
                 node.reset_Grad_Hess_missing();
             }
+            //time consumption: 5ms
             class_list.update_grad_hess_missing_for_tree_node(attribute_list.missing_value_attribute_list);
 
             //process the new tree nodes

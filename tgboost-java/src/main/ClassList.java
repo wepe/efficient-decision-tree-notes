@@ -11,7 +11,7 @@ public class ClassList {
     public double[] grad;
     public double[] hess;
 
-    public ClassList(Data data){
+    public ClassList(TrainData data){
         this.dataset_size = data.dataset_size;
         this.label = data.label;
         this.pred = new double[dataset_size];
@@ -50,6 +50,8 @@ public class ClassList {
         }
     }
 
+    //TODO
+    //parallel each col's calculation
     public void update_grad_hess_missing_for_tree_node(int[][] missing_value_attribute_list){
         for(int col=0;col<missing_value_attribute_list.length;col++){
             for(int i:missing_value_attribute_list[col]){

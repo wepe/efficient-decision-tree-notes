@@ -40,7 +40,7 @@ class ColumnSampler{
 
 public class Sampling {
     public static void main(String[] args) {
-
+        //test case
         RowSampler rs = new RowSampler(1000000, 0.8);
         System.out.println(rs.row_mask.subList(0,20));
         rs.shuffle();

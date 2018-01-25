@@ -56,7 +56,7 @@ public class GBM {
         this.min_child_weight = min_child_weight;
         this.scale_pos_weight = scale_pos_weight;
 
-        Data trainset = new Data(file_training);
+        TrainData trainset = new TrainData(file_training);
         AttributeList attribute_list = new AttributeList(trainset);
         ClassList class_list = new ClassList(trainset);
         RowSampler row_sampler = new RowSampler(trainset.dataset_size,this.rowsample);
@@ -76,7 +76,7 @@ public class GBM {
 
         //to evaluate on validation set and conduct early stopping
         boolean do_validation;
-        Data valset;
+        ValidationData valset;
         double[] val_pred;
         if(file_validation.equals("")){
             do_validation = false;
@@ -84,7 +84,7 @@ public class GBM {
             val_pred = null;
         }else {
             do_validation = true;
-            valset = new Data(file_validation);
+            valset = new ValidationData(file_validation);
             val_pred = new double[valset.dataset_size];
             Arrays.fill(val_pred,this.first_round_pred);
         }
@@ -128,7 +128,7 @@ public class GBM {
                             "TGBoost round {0},train-{1}:{2}",
                             new Object[]{i,eval_metric,train_metric});
                 }else {
-                    double[] cur_tree_pred = tree.predict(valset.origin_data);
+                    double[] cur_tree_pred = tree.predict(valset.origin_feature);
                     for(int n=0;n<val_pred.length;n++){
                         val_pred[n] += this.eta * cur_tree_pred[n];
                     }

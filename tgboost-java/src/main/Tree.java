@@ -64,6 +64,9 @@ public class Tree {
                         + Math.pow(G_nan,2)/(H_nan+lambda)
                         - Math.pow(G_total,2)/(H_total+lambda))-gamma;
 
+        //uncomment this line, then we use xgboost's method to deal with missing value
+        //gain_1 = -Double.MAX_VALUE;
+
         //if we let those with missing value go to left child
         double gain_2 = 0.5 * (
                 Math.pow(G_left+G_nan,2)/(H_left+H_nan+lambda)
@@ -259,15 +262,15 @@ public class Tree {
 
 
     class PredictCallable implements Callable{
-        private Double[] feature;
-        public PredictCallable(Double[] feature){
+        private double[] feature;
+        public PredictCallable(double[] feature){
             this.feature = feature;
         }
         @Override
         public Double call(){
             TreeNode cur_tree_node = root;
             while(!cur_tree_node.is_leaf){
-                if(feature[cur_tree_node.split_feature]==null){
+                if(feature[cur_tree_node.split_feature]==Data.NULL){
                     if(cur_tree_node.nan_go_to==0){
                         cur_tree_node = cur_tree_node.nan_child;
                     }else if(cur_tree_node.nan_go_to==1){
@@ -293,7 +296,7 @@ public class Tree {
     }
 
 
-    public double[] predict(Double[][] features){
+    public double[] predict(double[][] features){
         ExecutorService pool = Executors.newFixedThreadPool(num_thread);
         List<Future> list = new ArrayList<Future>();
         for(int i=0;i<features.length;i++){

@@ -1,5 +1,7 @@
 package main;
 
+import org.omg.CORBA.DATA_CONVERSION;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -82,8 +84,8 @@ public class ClassList {
                 int split_feature = treenode.split_feature;
                 double split_threshold = treenode.split_threshold;
                 double nan_go_to = treenode.nan_go_to;
-                Double val = attribute_list.origin_data[i][split_feature];
-                if(val==null){
+                double val = attribute_list.origin_feature[i][split_feature];
+                if(val== Data.NULL){
                     if(nan_go_to==0){
                         corresponding_tree_node[i] = treenode.nan_child;
                     }else if(nan_go_to==1){

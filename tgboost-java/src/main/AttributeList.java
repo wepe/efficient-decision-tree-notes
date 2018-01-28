@@ -10,13 +10,13 @@ public class AttributeList {
     public int[][] missing_value_attribute_list;
     public int[][][] cutting_inds;
     public double[][] cutting_thresholds;
-    public Double[][] origin_data;
+    public double[][] origin_feature;
 
     public AttributeList(TrainData data){
         missing_value_attribute_list = data.missing_index;
         feature_dim = data.feature_dim;
         attribute_list = data.feature_value_index;
-        origin_data = data.origin_feature;
+        origin_feature = data.origin_feature;
         sort_attribute_list();
         initialize_cutting_inds_thresholds();
         clean_up();

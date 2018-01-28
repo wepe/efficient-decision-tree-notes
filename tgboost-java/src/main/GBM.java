@@ -111,14 +111,14 @@ public class GBM {
             //save this tree
             this.trees.add(tree);
 
-            logger.log(Level.FINEST,
+            logger.log(Level.INFO,
                     "current tree has {0} nodes,including {1} nan tree nodes",
                     new Object[]{tree.nodes_cnt,tree.nan_nodes_cnt});
 
 
             //print training information
             if(eval_metric.equals("")){
-                logger.log(Level.INFO,"TGBoost round {0}",i);
+                logger.log(Level.FINEST,"TGBoost round {0}",i);
             }else {
                 double train_metric = calculate_metric(eval_metric,this.loss.transform(class_list.pred),class_list.label);
 
@@ -171,7 +171,7 @@ public class GBM {
         }
     }
 
-    public double[] predict(Double[][] features){
+    public double[] predict(double[][] features){
         double[] pred = new double[features.length];
         for(int i=0;i<pred.length;i++){
             pred[i] += first_round_pred;

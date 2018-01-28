@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Data{
-    //Nothing to do
+    //we use -Double.MAX_VALUE to represent missing value
+    public static double NULL = -Double.MAX_VALUE;
 }
 
 class TrainData extends Data{
@@ -22,7 +23,7 @@ class TrainData extends Data{
     public int feature_dim;
     public int dataset_size;
     public ArrayList<Integer> missing_count = new ArrayList<>();
-    public Double[][] origin_feature;
+    public double[][] origin_feature;
 
     public TrainData(String file){
         first_scan(file);
@@ -61,7 +62,7 @@ class TrainData extends Data{
         label = new double[dataset_size];
         missing_index = new int[feature_dim][];
         feature_value_index = new double[feature_dim][][];
-        origin_feature = new Double[dataset_size][feature_dim];
+        origin_feature = new double[dataset_size][feature_dim];
 
         for(int i=0;i<feature_dim;i++){
             int cnt = missing_count.get(i);
@@ -87,7 +88,7 @@ class TrainData extends Data{
                         missing_index[col][cur_missing_index[col]] = row;
                         cur_missing_index[col] += 1;
 
-                        origin_feature[row][col] = null;
+                        origin_feature[row][col] = Data.NULL;
                     }else{
                         feature_value_index[col][cur_index[col]][0] = Double.parseDouble(strs[col]);
                         feature_value_index[col][cur_index[col]][1] = row;
@@ -107,7 +108,7 @@ class TrainData extends Data{
 class ValidationData extends Data{
     public int feature_dim;
     public int dataset_size;
-    public Double[][] origin_feature;
+    public double[][] origin_feature;
     public double[] label;
 
     public ValidationData(String file){
@@ -133,7 +134,7 @@ class ValidationData extends Data{
 
     private void second_scan(String file){
         label = new double[dataset_size];
-        origin_feature = new Double[dataset_size][feature_dim];
+        origin_feature = new double[dataset_size][feature_dim];
 
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -143,7 +144,7 @@ class ValidationData extends Data{
                 label[row] = Double.parseDouble(strs[strs.length-1]);
                 for(int col=0;col<feature_dim;col++){
                     if(strs[col].equals("")){
-                        origin_feature[row][col] = null;
+                        origin_feature[row][col] = Data.NULL;
                     }else{
                         origin_feature[row][col] = Double.parseDouble(strs[col]);
                     }
@@ -160,7 +161,7 @@ class ValidationData extends Data{
 class TestData extends Data{
     public int feature_dim;
     public int dataset_size;
-    public Double[][] origin_feature;
+    public double[][] origin_feature;
 
     public TestData(String file){
         first_scan(file);
@@ -184,7 +185,7 @@ class TestData extends Data{
     }
 
     private void second_scan(String file){
-        origin_feature = new Double[dataset_size][feature_dim];
+        origin_feature = new double[dataset_size][feature_dim];
 
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -193,7 +194,7 @@ class TestData extends Data{
                 String[] strs = br.readLine().split(",");
                 for(int col=0;col<feature_dim;col++){
                     if(strs[col].equals("")){
-                        origin_feature[row][col] = null;
+                        origin_feature[row][col] = Data.NULL;
                     }else{
                         origin_feature[row][col] = Double.parseDouble(strs[col]);
                     }

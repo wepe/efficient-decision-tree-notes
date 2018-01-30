@@ -4,6 +4,7 @@ import os
 def run(file_training,
         file_validation,
         file_testing,
+        file_output,
         early_stopping_rounds,
         maximize=True,
         eval_metric="auc",
@@ -19,16 +20,18 @@ def run(file_training,
         reg_lambda=1.0,
         gamma=0,
         num_thread=-1):
+
     if maximize:
         maximize = 'true'
     else:
         maximize = 'false'
 
     path = os.path.dirname(os.path.realpath(__file__))
-    command = "java -jar " + path + "/tgboost.jar" \
+    command = "java -Xmx3600m -jar " + path + "/tgboost.jar" \
               + " " + file_training \
               + " " + file_validation \
               + " " + file_testing \
+              + " " + file_output \
               + " " + str(early_stopping_rounds) \
               + " " + maximize \
               + " " + eval_metric \
@@ -44,5 +47,6 @@ def run(file_training,
               + " " + str(reg_lambda) \
               + " " + str(gamma) \
               + " " + str(num_thread)
+
     os.system(command)
 

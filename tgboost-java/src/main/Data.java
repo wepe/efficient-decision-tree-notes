@@ -13,17 +13,17 @@ import java.util.Arrays;
 
 public class Data{
     //we use -Double.MAX_VALUE to represent missing value
-    public static double NULL = -Double.MAX_VALUE;
+    public static float NULL = -Float.MAX_VALUE;
 }
 
 class TrainData extends Data{
-    public double[][][] feature_value_index;
+    public float[][][] feature_value_index;
     public double[] label;
     public int[][] missing_index;
     public int feature_dim;
     public int dataset_size;
     public ArrayList<Integer> missing_count = new ArrayList<>();
-    public double[][] origin_feature;
+    public float[][] origin_feature;
 
     public TrainData(String file){
         first_scan(file);
@@ -61,14 +61,15 @@ class TrainData extends Data{
     private void second_scan(String file){
         label = new double[dataset_size];
         missing_index = new int[feature_dim][];
-        feature_value_index = new double[feature_dim][][];
-        origin_feature = new double[dataset_size][feature_dim];
+        feature_value_index = new float[feature_dim][][];
 
         for(int i=0;i<feature_dim;i++){
             int cnt = missing_count.get(i);
             missing_index[i] = new int[cnt];
-            feature_value_index[i] = new double[dataset_size-cnt][2];
+            feature_value_index[i] = new float[dataset_size-cnt][2];
         }
+
+        origin_feature = new float[dataset_size][feature_dim];
 
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -81,7 +82,7 @@ class TrainData extends Data{
 
             for(int row=0;row<dataset_size;row++){
                 String[] strs = br.readLine().split(",");
-                label[row] = Double.parseDouble(strs[strs.length-1]);
+                label[row] = Float.parseFloat(strs[strs.length-1]);
 
                 for(int col=0;col<feature_dim;col++){
                     if(strs[col].equals("")){
@@ -90,11 +91,11 @@ class TrainData extends Data{
 
                         origin_feature[row][col] = Data.NULL;
                     }else{
-                        feature_value_index[col][cur_index[col]][0] = Double.parseDouble(strs[col]);
+                        feature_value_index[col][cur_index[col]][0] = Float.parseFloat(strs[col]);
                         feature_value_index[col][cur_index[col]][1] = row;
                         cur_index[col] += 1;
 
-                        origin_feature[row][col] = Double.parseDouble(strs[col]);
+                        origin_feature[row][col] = Float.parseFloat(strs[col]);
                     }
                 }
             }
@@ -108,7 +109,7 @@ class TrainData extends Data{
 class ValidationData extends Data{
     public int feature_dim;
     public int dataset_size;
-    public double[][] origin_feature;
+    public float[][] origin_feature;
     public double[] label;
 
     public ValidationData(String file){
@@ -134,19 +135,19 @@ class ValidationData extends Data{
 
     private void second_scan(String file){
         label = new double[dataset_size];
-        origin_feature = new double[dataset_size][feature_dim];
+        origin_feature = new float[dataset_size][feature_dim];
 
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
             br.readLine();
             for(int row=0;row<dataset_size;row++){
                 String[] strs = br.readLine().split(",");
-                label[row] = Double.parseDouble(strs[strs.length-1]);
+                label[row] = Float.parseFloat(strs[strs.length-1]);
                 for(int col=0;col<feature_dim;col++){
                     if(strs[col].equals("")){
                         origin_feature[row][col] = Data.NULL;
                     }else{
-                        origin_feature[row][col] = Double.parseDouble(strs[col]);
+                        origin_feature[row][col] = Float.parseFloat(strs[col]);
                     }
                 }
             }
@@ -161,7 +162,7 @@ class ValidationData extends Data{
 class TestData extends Data{
     public int feature_dim;
     public int dataset_size;
-    public double[][] origin_feature;
+    public float[][] origin_feature;
 
     public TestData(String file){
         first_scan(file);
@@ -185,7 +186,7 @@ class TestData extends Data{
     }
 
     private void second_scan(String file){
-        origin_feature = new double[dataset_size][feature_dim];
+        origin_feature = new float[dataset_size][feature_dim];
 
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -196,7 +197,7 @@ class TestData extends Data{
                     if(strs[col].equals("")){
                         origin_feature[row][col] = Data.NULL;
                     }else{
-                        origin_feature[row][col] = Double.parseDouble(strs[col]);
+                        origin_feature[row][col] = Float.parseFloat(strs[col]);
                     }
                 }
             }

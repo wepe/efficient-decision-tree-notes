@@ -6,11 +6,11 @@ import java.util.Comparator;
 
 public class AttributeList {
     public int feature_dim;
-    private double[][][] attribute_list;
+    private float[][][] attribute_list;
     public int[][] missing_value_attribute_list;
     public int[][][] cutting_inds;
-    public double[][] cutting_thresholds;
-    public double[][] origin_feature;
+    public float[][] cutting_thresholds;
+    public float[][] origin_feature;
 
     public AttributeList(TrainData data){
         missing_value_attribute_list = data.missing_index;
@@ -25,9 +25,9 @@ public class AttributeList {
     //pre-sort: for each feature,sort (value,index) by the value
     private void sort_attribute_list(){
         for(int i=0;i<feature_dim;i++){
-            Arrays.sort(attribute_list[i], new Comparator<double[]>() {
+            Arrays.sort(attribute_list[i], new Comparator<float[]>() {
                 @Override
-                public int compare(double[] a, double[] b) {
+                public int compare(float[] a, float[] b) {
                     return Double.compare(a[0], b[0]);
                 }
             });
@@ -36,7 +36,7 @@ public class AttributeList {
 
     private void initialize_cutting_inds_thresholds(){
         cutting_inds = new int[feature_dim][][];
-        cutting_thresholds = new double[feature_dim][];
+        cutting_thresholds = new float[feature_dim][];
 
         for(int i=0;i<feature_dim;i++){
             //for this feature, get its cutting index
@@ -51,7 +51,7 @@ public class AttributeList {
                 }
             }
             //for this feature,store its cutting threshold
-            cutting_thresholds[i] = new double[list.size()];
+            cutting_thresholds[i] = new float[list.size()];
             for(int t=0;t<cutting_thresholds[i].length;t++){
                 cutting_thresholds[i][t] = attribute_list[i][list.get(t)][0];
             }

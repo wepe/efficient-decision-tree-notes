@@ -262,8 +262,8 @@ public class Tree {
 
 
     class PredictCallable implements Callable{
-        private double[] feature;
-        public PredictCallable(double[] feature){
+        private float[] feature;
+        public PredictCallable(float[] feature){
             this.feature = feature;
         }
         @Override
@@ -296,7 +296,7 @@ public class Tree {
     }
 
 
-    public double[] predict(double[][] features){
+    public double[] predict(float[][] features){
         ExecutorService pool = Executors.newFixedThreadPool(num_thread);
         List<Future> list = new ArrayList<Future>();
         for(int i=0;i<features.length;i++){

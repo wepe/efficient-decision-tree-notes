@@ -10,21 +10,22 @@ public class Main {
         String file_training = args[0];
         String file_validation = args[1];
         String file_testing = args[2];
-        int early_stopping_round = Integer.parseInt(args[3]);
-        boolean maximize = args[4].equals("true");
-        String eval_metric = args[5];
-        String loss = args[6];
-        double eta = Double.parseDouble(args[7]);
-        int num_boost_round = Integer.parseInt(args[8]);
-        int max_depth = Integer.parseInt(args[9]);
-        double scale_pos_weight = Double.parseDouble(args[10]);
-        double rowsample = Double.parseDouble(args[11]);
-        double colample = Double.parseDouble(args[12]);
-        double min_child_weight = Double.parseDouble(args[13]);
-        int min_sample_split = Integer.parseInt(args[14]);
-        double lambda = Double.parseDouble(args[15]);
-        double gamma = Double.parseDouble(args[16]);
-        int num_thread = Integer.parseInt(args[17]);
+        String file_output = args[3];
+        int early_stopping_round = Integer.parseInt(args[4]);
+        boolean maximize = args[5].equals("true");
+        String eval_metric = args[6];
+        String loss = args[7];
+        double eta = Double.parseDouble(args[8]);
+        int num_boost_round = Integer.parseInt(args[9]);
+        int max_depth = Integer.parseInt(args[10]);
+        double scale_pos_weight = Double.parseDouble(args[11]);
+        double rowsample = Double.parseDouble(args[12]);
+        double colample = Double.parseDouble(args[13]);
+        double min_child_weight = Double.parseDouble(args[14]);
+        int min_sample_split = Integer.parseInt(args[15]);
+        double lambda = Double.parseDouble(args[16]);
+        double gamma = Double.parseDouble(args[17]);
+        int num_thread = Integer.parseInt(args[18]);
 
         GBM tgb = new GBM();
         tgb.fit(file_training,
@@ -53,7 +54,7 @@ public class Main {
         }
         String content = String.join("\n",strs);
         try{
-            Files.write(Paths.get("output.txt"), content.getBytes());
+            Files.write(Paths.get(file_output), content.getBytes());
         }catch (IOException e){
             e.printStackTrace();
         }

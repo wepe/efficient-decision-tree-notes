@@ -171,7 +171,7 @@ public class GBM {
         }
     }
 
-    public double[] predict(double[][] features){
+    public double[] predict(float[][] features){
         logger.info("TGBoost start predicting,results are saved into output.txt");
         double[] pred = new double[features.length];
         for(int i=0;i<pred.length;i++){

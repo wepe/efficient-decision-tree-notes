@@ -8,21 +8,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GBM {
-    public ArrayList<Tree> trees = new ArrayList<>();
-    public double eta;
-    public int num_boost_round;
-    public double first_round_pred;
-    public Loss loss;
-    public int max_depth;
-    public double rowsample;
-    public double colsample;
-    public double lambda;
-    public int min_sample_split;
-    public double gamma;
-    public int num_thread;
-    public double min_child_weight;
-    public double scale_pos_weight;
-    public String eval_metric;
+    private ArrayList<Tree> trees = new ArrayList<>();
+    private double eta;
+    private int num_boost_round;
+    private double first_round_pred;
+    private Loss loss;
+    private int max_depth;
+    private double rowsample;
+    private double colsample;
+    private double lambda;
+    private int min_sample_split;
+    private double gamma;
+    private int num_thread;
+    private double min_child_weight;
+    private double scale_pos_weight;
+    private String eval_metric;
 
     private static Logger logger = Logger.getLogger("InfoLogging");
 

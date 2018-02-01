@@ -24,9 +24,9 @@ class TrainData extends Data{
     public int[][] missing_index;
     public int feature_dim;
     public int dataset_size;
-    public ArrayList<Integer> missing_count = new ArrayList<>();
+    private ArrayList<Integer> missing_count = new ArrayList<>();
     public float[][] origin_feature;
-    public ArrayList<String> cat_features_names;
+    private ArrayList<String> cat_features_names;
     public ArrayList<Integer> cat_features_cols = new ArrayList<>();
 
     public TrainData(String file,ArrayList<String> categorical_features){

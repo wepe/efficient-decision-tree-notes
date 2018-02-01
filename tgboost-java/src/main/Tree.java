@@ -4,17 +4,17 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class Tree {
-    public TreeNode root;
-    public int min_sample_split;
-    public double min_child_weight;
-    public int max_depth;
-    public double colsample;
-    public double rowsample;
-    public double lambda;
-    public double gamma;
-    public int num_thread;
-    public ArrayList<Integer> cat_features_cols;
-    public Queue<TreeNode> alive_nodes = new LinkedList<>();
+    private TreeNode root;
+    private int min_sample_split;
+    private double min_child_weight;
+    private int max_depth;
+    private double colsample;
+    private double rowsample;
+    private double lambda;
+    private double gamma;
+    private int num_thread;
+    private ArrayList<Integer> cat_features_cols;
+    private Queue<TreeNode> alive_nodes = new LinkedList<>();
     //number of tree node of this tree
     public int nodes_cnt = 0;
     //number of nan tree node of this tree
@@ -48,12 +48,12 @@ public class Tree {
         this.lambda = Math.max(this.lambda, 0.00001);
     }
 
-    public double calculate_leaf_score(double G,double H){
+    private double calculate_leaf_score(double G,double H){
         //According to xgboost, the leaf score is : - G / (H+lambda)
         return -G/(H+this.lambda);
     }
 
-    public double[] calculate_split_gain(double G_left,double H_left,double G_nan,double H_nan,double G_total,double H_total){
+    private double[] calculate_split_gain(double G_left,double H_left,double G_nan,double H_nan,double G_total,double H_total){
         //According to xgboost, the scoring function is:
         //     gain = 0.5 * (GL^2/(HL+lambda) + GR^2/(HR+lambda) - (GL+GR)^2/(HL+HR+lambda)) - gamma
         //this gain is the loss reduction, We want it to be as large as possible.
@@ -263,7 +263,7 @@ public class Tree {
     }
 
 
-    public void build(AttributeList attribute_list,
+    private void build(AttributeList attribute_list,
                       ClassList class_list,
                       ColumnSampler col_sampler){
         while(!alive_nodes.isEmpty()){

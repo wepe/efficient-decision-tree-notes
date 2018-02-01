@@ -27,9 +27,9 @@ public class TreeNode {
     public double[] G_left;
     public double[] H_left;
     //when split finding, record the best threshold, gain, missing value's branch for each feature
-    public double[] best_thresholds;
-    public double[] best_gains;
-    public double[] best_nan_go_to;
+    private double[] best_thresholds;
+    private double[] best_gains;
+    private double[] best_nan_go_to;
     public double nan_go_to;
     //some data fall into this tree node
     //gradient sum, hessian sum of those with missing value for each feature
@@ -46,7 +46,7 @@ public class TreeNode {
     double leaf_score;
     //for categorical feature,store (col,(value,(grad_sum,hess_sum)))
     public HashMap<Integer,HashMap<Integer,double[]>> cat_feature_col_value_GH = new HashMap<>();
-    public HashMap<Integer,ArrayList<Integer>> cat_feature_col_leftcatvalue = new HashMap<>();
+    private HashMap<Integer,ArrayList<Integer>> cat_feature_col_leftcatvalue = new HashMap<>();
 
 
     public TreeNode(int index,int depth,int feature_dim,boolean is_leaf){

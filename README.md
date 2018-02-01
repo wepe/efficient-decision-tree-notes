@@ -18,7 +18,6 @@ SLIQ和SPRINT算法的特点决定了树生长的方式是level-wise(breadth-fir
 
 - 自己动手实现一个高效决策树
 
-- h
 
 ### 参考文献
 

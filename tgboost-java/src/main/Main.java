@@ -3,6 +3,7 @@ package main;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args){
@@ -27,9 +28,16 @@ public class Main {
         double gamma = Double.parseDouble(args[17]);
         int num_thread = Integer.parseInt(args[18]);
 
+        String[] cat_features = args[19].split(",");
+        ArrayList<String> categorical_features = new ArrayList<>();
+        for(String cat_feature:cat_features){
+            categorical_features.add(cat_feature);
+        }
+
         GBM tgb = new GBM();
         tgb.fit(file_training,
                 file_validation,
+                categorical_features,
                 early_stopping_round,
                 maximize,
                 eval_metric,

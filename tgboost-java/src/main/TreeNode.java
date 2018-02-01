@@ -10,7 +10,9 @@
 
 package main;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class TreeNode {
     public int index;
@@ -36,11 +38,15 @@ public class TreeNode {
     //internal node
     public int split_feature;
     public double split_threshold;
+    public ArrayList<Double> split_left_child_catvalue;
     public TreeNode nan_child;
     public TreeNode left_child;
     public TreeNode right_child;
     //leaf node
     double leaf_score;
+    //for categorical feature,store (col,(value,(grad_sum,hess_sum)))
+    public HashMap<Integer,HashMap<Integer,double[]>> cat_feature_col_value_GH = new HashMap<>();
+    public HashMap<Integer,ArrayList<Integer>> cat_feature_col_leftcatvalue = new HashMap<>();
 
 
     public TreeNode(int index,int depth,int feature_dim,boolean is_leaf){
@@ -80,11 +86,6 @@ public class TreeNode {
         Hess = value;
     }
 
-    public void reset_Grad_Hess_missing(){
-        Arrays.fill(this.Grad_missing,0.0);
-        Arrays.fill(this.Hess_missing,0.0);
-    }
-
     public void update_best_split(int col,double threshold,double gain,double nan_go_to){
         if(gain > best_gains[col]){
             best_gains[col] = gain;
@@ -93,7 +94,13 @@ public class TreeNode {
         }
     }
 
-    public double[] get_best_feature_threshold_gain(){
+    public void set_categorical_feature_best_split(int col, ArrayList<Integer> left_child_catvalue,double gain,double nan_go_to){
+        best_gains[col] = gain;
+        best_nan_go_to[col] = nan_go_to;
+        cat_feature_col_leftcatvalue.put(col,left_child_catvalue);
+    }
+
+    public ArrayList<Double> get_best_feature_threshold_gain(){
         int best_feature = 0;
         double max_gain = -Double.MAX_VALUE;
         for(int i=0;i<feature_dim;i++){
@@ -102,14 +109,37 @@ public class TreeNode {
                 best_feature = i;
             }
         }
-
-        return new double[]{best_feature,best_thresholds[best_feature],max_gain,best_nan_go_to[best_feature]};
+        //consider categorical feature
+        ArrayList<Double> ret = new ArrayList<>();
+        ret.add((double) best_feature);
+        ret.add(max_gain);
+        ret.add(best_nan_go_to[best_feature]);
+        if(cat_feature_col_leftcatvalue.containsKey(best_feature)){
+            for(double catvalue:cat_feature_col_leftcatvalue.get(best_feature)){
+                ret.add(catvalue);
+            }
+        }else {
+            ret.add(best_thresholds[best_feature]);
+        }
+        return ret;
     }
 
     public void internal_node_setter(double feature,double threshold,double nan_go_to,TreeNode nan_child,
                                      TreeNode left_child,TreeNode right_child,boolean is_leaf){
         this.split_feature = (int) feature;
         this.split_threshold = threshold;
+        this.nan_go_to = nan_go_to;
+        this.nan_child = nan_child;
+        this.left_child = left_child;
+        this.right_child = right_child;
+        this.is_leaf = is_leaf;
+        clean_up();
+    }
+
+    public void internal_node_setter(double feature,ArrayList<Double> left_child_catvalue,double nan_go_to,TreeNode nan_child,
+                                     TreeNode left_child,TreeNode right_child,boolean is_leaf){
+        this.split_feature = (int) feature;
+        this.split_left_child_catvalue = left_child_catvalue;
         this.nan_go_to = nan_go_to;
         this.nan_child = nan_child;
         this.left_child = left_child;
@@ -131,6 +161,8 @@ public class TreeNode {
         best_nan_go_to = null;
         G_left = null;
         H_left = null;
+        cat_feature_col_value_GH = null;
+        cat_feature_col_leftcatvalue = null;
     }
 
 }

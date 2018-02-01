@@ -82,21 +82,39 @@ public class ClassList {
             TreeNode treenode = corresponding_tree_node[i];
             if(!treenode.is_leaf){
                 int split_feature = treenode.split_feature;
-                double split_threshold = treenode.split_threshold;
                 double nan_go_to = treenode.nan_go_to;
                 double val = attribute_list.origin_feature[i][split_feature];
-                if(val== Data.NULL){
-                    if(nan_go_to==0){
-                        corresponding_tree_node[i] = treenode.nan_child;
-                    }else if(nan_go_to==1){
+                //consider categorical feature
+                if(attribute_list.cat_features_cols.contains(split_feature)){
+                    ArrayList<Double> left_child_catvalue = treenode.split_left_child_catvalue;
+                    if(val==Data.NULL){
+                        if(nan_go_to==0){
+                            corresponding_tree_node[i] = treenode.nan_child;
+                        }else if(nan_go_to==1){
+                            corresponding_tree_node[i] = treenode.left_child;
+                        }else {
+                            corresponding_tree_node[i] = treenode.right_child;
+                        }
+                    }else if(left_child_catvalue.contains(val)){
                         corresponding_tree_node[i] = treenode.left_child;
                     }else {
                         corresponding_tree_node[i] = treenode.right_child;
                     }
-                }else if(val<=split_threshold){
-                    corresponding_tree_node[i] = treenode.left_child;
                 }else {
-                    corresponding_tree_node[i] = treenode.right_child;
+                    double split_threshold = treenode.split_threshold;
+                    if(val== Data.NULL){
+                        if(nan_go_to==0){
+                            corresponding_tree_node[i] = treenode.nan_child;
+                        }else if(nan_go_to==1){
+                            corresponding_tree_node[i] = treenode.left_child;
+                        }else {
+                            corresponding_tree_node[i] = treenode.right_child;
+                        }
+                    }else if(val<=split_threshold){
+                        corresponding_tree_node[i] = treenode.left_child;
+                    }else {
+                        corresponding_tree_node[i] = treenode.right_child;
+                    }
                 }
             }
         }

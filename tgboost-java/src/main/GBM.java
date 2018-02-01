@@ -28,6 +28,7 @@ public class GBM {
 
     public void fit(String file_training,
                     String file_validation,
+                    ArrayList<String> categorical_features,
                     int early_stopping_rounds,
                     boolean maximize,
                     String eval_metric,
@@ -56,7 +57,7 @@ public class GBM {
         this.min_child_weight = min_child_weight;
         this.scale_pos_weight = scale_pos_weight;
 
-        TrainData trainset = new TrainData(file_training);
+        TrainData trainset = new TrainData(file_training,categorical_features);
         AttributeList attribute_list = new AttributeList(trainset);
         ClassList class_list = new ClassList(trainset);
         RowSampler row_sampler = new RowSampler(trainset.dataset_size,this.rowsample);
@@ -101,7 +102,8 @@ public class GBM {
         //Start learning
         logger.info("TGBoost start training");
         for(int i=0;i<num_boost_round;i++){
-            Tree tree = new Tree(min_sample_split,min_child_weight,max_depth,colsample,rowsample,lambda,gamma,num_thread);
+            Tree tree = new Tree(min_sample_split,min_child_weight,max_depth,colsample,rowsample,
+                                 lambda,gamma,num_thread,attribute_list.cat_features_cols);
             tree.fit(attribute_list,class_list,row_sampler,col_sampler);
             //when finish building this tree, update the class_list.pred, grad, hess
             class_list.update_pred(this.eta);

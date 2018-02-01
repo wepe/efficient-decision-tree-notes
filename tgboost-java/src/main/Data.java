@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Data{
     //we use -Double.MAX_VALUE to represent missing value
@@ -24,18 +26,29 @@ class TrainData extends Data{
     public int dataset_size;
     public ArrayList<Integer> missing_count = new ArrayList<>();
     public float[][] origin_feature;
+    public ArrayList<String> cat_features_names;
+    public ArrayList<Integer> cat_features_cols = new ArrayList<>();
 
-    public TrainData(String file){
+    public TrainData(String file,ArrayList<String> categorical_features){
+        this.cat_features_names = categorical_features;
         first_scan(file);
         second_scan(file);
     }
 
-    //to obtain: feature_dim, dataset_size,missing_count
+    //to obtain: feature_dim, dataset_size,missing_count,cat_features_dim
     private void first_scan(String file){
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String header = br.readLine();
-            feature_dim = header.split(",").length - 1;
+            String[] columns = header.split(",");
+            feature_dim = columns.length - 1;
+
+            for(int i=0;i<columns.length;i++){
+                if(cat_features_names.contains(columns[i])){
+                    cat_features_cols.add(i);
+                }
+            }
+
             for(int i=0;i<feature_dim;i++){
                 missing_count.add(0);
             }
@@ -57,7 +70,7 @@ class TrainData extends Data{
         }
     }
 
-    //to obtain:feature_value_index,label,missing_index,origin_data
+    //to obtain:feature_value_index,label,missing_index,origin_feature,cat_features_values
     private void second_scan(String file){
         label = new double[dataset_size];
         missing_index = new int[feature_dim][];
@@ -88,13 +101,11 @@ class TrainData extends Data{
                     if(strs[col].equals("")){
                         missing_index[col][cur_missing_index[col]] = row;
                         cur_missing_index[col] += 1;
-
                         origin_feature[row][col] = Data.NULL;
                     }else{
                         feature_value_index[col][cur_index[col]][0] = Float.parseFloat(strs[col]);
                         feature_value_index[col][cur_index[col]][1] = row;
                         cur_index[col] += 1;
-
                         origin_feature[row][col] = Float.parseFloat(strs[col]);
                     }
                 }

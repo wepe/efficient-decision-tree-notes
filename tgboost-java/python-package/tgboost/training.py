@@ -5,6 +5,7 @@ def run(file_training,
         file_validation,
         file_testing,
         file_output,
+        categorical_features,
         early_stopping_rounds,
         maximize=True,
         eval_metric="auc",
@@ -25,6 +26,7 @@ def run(file_training,
         maximize = 'true'
     else:
         maximize = 'false'
+    categorical_features = ",".join(categorical_features)
 
     path = os.path.dirname(os.path.realpath(__file__))
     command = "java -Xmx3600m -jar " + path + "/tgboost.jar" \
@@ -46,7 +48,8 @@ def run(file_training,
               + " " + str(min_sample_split) \
               + " " + str(reg_lambda) \
               + " " + str(gamma) \
-              + " " + str(num_thread)
+              + " " + str(num_thread) \
+              + " " + categorical_features
 
     os.system(command)
 

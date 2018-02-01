@@ -11,12 +11,14 @@ public class AttributeList {
     public int[][][] cutting_inds;
     public float[][] cutting_thresholds;
     public float[][] origin_feature;
+    public ArrayList<Integer> cat_features_cols;
 
     public AttributeList(TrainData data){
         missing_value_attribute_list = data.missing_index;
         feature_dim = data.feature_dim;
         attribute_list = data.feature_value_index;
         origin_feature = data.origin_feature;
+        cat_features_cols = data.cat_features_cols;
         sort_attribute_list();
         initialize_cutting_inds_thresholds();
         clean_up();
@@ -51,10 +53,11 @@ public class AttributeList {
                 }
             }
             //for this feature,store its cutting threshold
-            cutting_thresholds[i] = new float[list.size()];
-            for(int t=0;t<cutting_thresholds[i].length;t++){
+            cutting_thresholds[i] = new float[list.size()+1];
+            for(int t=0;t<cutting_thresholds[i].length-1;t++){
                 cutting_thresholds[i][t] = attribute_list[i][list.get(t)][0];
             }
+            cutting_thresholds[i][list.size()] = attribute_list[i][list.get(list.size()-1)+1][0];
 
             //for this feature,store inds of each interval
             cutting_inds[i] = new int[list.size()+1][]; //list.size()+1 interval

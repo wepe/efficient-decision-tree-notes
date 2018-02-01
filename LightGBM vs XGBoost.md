@@ -12,3 +12,5 @@
 - 分布式时, histogram based的通信量更低．所以分布式版本的XGBoost也用histogram分箱
 
 - LightGBM两个创新．GOSS，保留梯度绝对值大的样本，抽样梯度绝对值小的；　EFB，数据一般是稀疏的，很多特征是exclusive的，可以组成一个＂大特征＂，这样可以降低构建直返图时需遍历的特征数量．两个措施，分别减少样本和特征
+
+- LightGBM直接支持类别型特征．一般我们在处理类别型特征时会先将其one-hot encoding，这种做法不是最好的，特别是当类别特多时，每种类别分摊到的样本个数就会很少，在做split finding时，根据＂是否某类别＂分裂得到的增益会很小（因为被太多类别分摊了），很难被选做分裂特征，或者需要很深的树才能选中，容易造成过拟合．实际上，更好的处理方式是将所以类别分为两个子集，LightGBM的做法是：统计每个类别的sum_gradient/sum_hessian，然后按照这个统计值排序，按排好的序去依次遍历切分点．参考论文：[On Grouping for Maximum Homogeneity](http://www.csiss.org/SPACE/workshops/2004/SAC/files/fisher.pdf)

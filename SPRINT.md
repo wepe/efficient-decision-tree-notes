@@ -35,7 +35,7 @@ SPRINT采用的attribute list结构如下图所示，包括三列，第一列是
 
 ![Selection_008.png](https://github.com/wepe/efficient-decision-tree-notes/blob/master/images/Selection_008.png)
 
-节点0选中了age属性，阈值27.5，那么对于age list，可以直接切分为两部分，分别分配给节点１和２．而对于car type list的切分就没那么直接了．我们需要在切分age list时，用哈希表记录(rid,leaf_node)，即记录样本的索引及其对应的叶节点．根据这个哈希表我们就可以对car type list进行切分了．当然，这个哈希表无需记录所有样本的索引及其叶节点，只需要记录两个子节点中分配到的样本较少的那个．
+节点0选中了age属性，阈值27.5，那么对于age list，可以直接切分为两部分，分别分配给节点１和２．而对于car type list的切分就没那么直接了．我们需要在切分age list时，用哈希表记录(rid,leaf_node)，即记录样本的索引及其对应的叶节点．根据这个哈希表我们就可以对car type list进行切分了．当然，这个哈希表无需记录所有样本的索引及其叶节点，只需要记录两个子节点中分配到的样本较少的那个
 
 在对attibute list切分的过程中，可以同时统计两个子节点的直方图
 

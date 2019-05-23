@@ -1,3 +1,6 @@
+
+详细的可以参考我的讲义：[gbdt.pdf](http://wepon.me/files/gbdt.pdf)
+
 - LightGBM采用histogram based决策树，对原始数据分箱后，只需存储 #data * #feature * 1 byte，因为256个bin一般效果就够好了，只需要8bit即1byte表示原始的浮点类型数据
 
 - 寻找分割点时，LightGBM只需要遍历一遍数据，O(#data * #data)，每遍历一个特征时，就统计每个bin的Gradient 和Hessian的和，遍历完这个特征后，可以得到统计信息[G1,H1;G2,H2....Gn,Hn]，据这个能得到这个特征的最佳切分．因为LightGBM中每个树节点保留自己的数据，所以相当于遍历了一遍原始数据，即可对所有当前alive节点进行分裂．pre-sort的算法，采用level-wise建树，也只需遍历一遍原始数据

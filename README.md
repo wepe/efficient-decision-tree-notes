@@ -8,15 +8,15 @@ SLIQ和SPRINT算法的特点决定了树生长的方式是level-wise(breadth-fir
 
 内容大致按以下几部分展开:
 
-- 基于特征预排序的算法SLIQ
+- 基于特征预排序的算法[SLIQ](https://github.com/wepe/efficient-decision-tree-notes/blob/master/SLIQ.md)
 
-- 基于特征预排序的算法SPRINT
+- 基于特征预排序的算法[SPRINT](https://github.com/wepe/efficient-decision-tree-notes/blob/master/SPRINT.md)
 
-- 基于特征离散化的算法CLOUDS
+- 基于特征离散化的算法[CLOUDS](https://github.com/wepe/efficient-decision-tree-notes/blob/master/ClOUDS.md)
 
-- 研究开源框架: LightGBM，XGBoost，Decision_Tree_PDeque
+- 研究开源框架: [LightGBM，XGBoost](https://github.com/wepe/efficient-decision-tree-notes/blob/master/LightGBM%20vs%20XGBoost.md)
 
-- 自己动手实现一个高效决策树
+- 自己动手实现一个高效决策树 [tgboost](https://github.com/wepe/tgboost)
 
 
 ### 参考文献
@@ -33,6 +33,4 @@ SLIQ和SPRINT算法的特点决定了树生长的方式是level-wise(breadth-fir
 [5] Li, Ping, Qiang Wu, and Christopher J. Burges. “Mcrank: Learning to rank using multiple classification and gradient boosting.” Advances in neural information processing systems. 2007.
 
 [6] Shi, Haijian. “Best-first decision tree learning.” Diss. The University of Waikato, 2007.
-
-[7] https://github.com/bobye/Decision_Tree_PDeque
 
